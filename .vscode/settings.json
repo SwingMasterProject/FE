@@ -1,0 +1,13 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "gson-2.3.jar",
+        "okhttp-4.10.0.jar",
+        "kotlin-stdlib-1.6.20.jar",
+        "okio-jvm-3.0.0.jar",
+        "사용 라이브러리/gson-2.3.jar",
+        "사용 라이브러리/kotlin-stdlib-1.6.20.jar",
+        "사용 라이브러리/okhttp-4.10.0.jar",
+        "사용 라이브러리/okio-jvm-3.0.0.jar"
+    ]
+}
