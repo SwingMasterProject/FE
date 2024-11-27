@@ -21,6 +21,7 @@ public class FE_KIOSK extends JFrame {
     //전역 변수 사용
     private int table_num = 1;
     private Map<String, List<Menu>> menuData = new LinkedHashMap<>();
+    private Map<String, List<Order_list>> orderList = new LinkedHashMap<>();
     private Container c;
     private Container left_c;
     private Container mid_c;
@@ -66,15 +67,27 @@ public class FE_KIOSK extends JFrame {
         
         left_c = new JPanel(); // 각 왼 중 오 컨테이너를 패널로 바꾸면 조절 가능
         left_c.setLayout(new BoxLayout(left_c, BoxLayout.Y_AXIS));
-        left_c.setBounds(0, 0, left_width, height);
+        // 왼쪽 컨테이너 크기 고정
+        Dimension leftSize = new Dimension((int)(width * 0.15), height);
+        left_c.setPreferredSize(leftSize);
+        left_c.setMaximumSize(leftSize);
+        left_c.setMinimumSize(leftSize);
 
         mid_c = new JPanel();
         mid_c.setLayout(new BoxLayout(mid_c, BoxLayout.Y_AXIS));
-        mid_c.setBounds(left_width, 0, mid_width, height);
+        // 중간 컨테이너 크기 고정
+        Dimension midSize = new Dimension((int)(width * 0.5), height);
+        mid_c.setPreferredSize(midSize);
+        mid_c.setMaximumSize(midSize);
+        mid_c.setMinimumSize(midSize);
 
         right_c = new JPanel();
         right_c.setLayout(new BoxLayout(right_c, BoxLayout.Y_AXIS));
-        right_c.setBounds(left_width + mid_width, 0, right_width, height);
+        // 오른쪽 컨테이너 크기 고정
+        Dimension rightSize = new Dimension((int)(width * 0.35), height);
+        right_c.setPreferredSize(rightSize);
+        right_c.setMaximumSize(rightSize);
+        right_c.setMinimumSize(rightSize);
 
         //mid_c.setMaximumSize(new Dimension(Short.MAX_VALUE, mid_c.getPreferredSize().height));//????
 
@@ -89,53 +102,42 @@ public class FE_KIOSK extends JFrame {
         // 메뉴 보이는 부분 중간
         midly_main = new JPanel();
         midly_main.setLayout(new BoxLayout(midly_main, BoxLayout.Y_AXIS));
-        //midly_main.setPreferredSize(new Dimension(100000000, 10));// 여기 추가했음 확인##################
+        
         midly = new JPanel();
-        //midly.setLayout(new BoxLayout(midly, BoxLayout.Y_AXIS));
-        //midly.setLayout(new GridLayout(0, 3, 10, 10));
         midly.setLayout(new GridBagLayout());
         midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 500));
 
         midly_menu = new JScrollPane(midly);
         midly_menu.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        //midly_menu.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        //midly_menu.setPreferredSize(new Dimension(20000000, 400000));
-        //midly_menu.setLayout(new FlowLayout());
+        
 
         // 계산 하는 부분 오른쪽
         rightly_main = new JPanel(); // 레이아웃 미정
         rightly = new JPanel();
-        rightly.setLayout(new BoxLayout(midly, BoxLayout.Y_AXIS));
+        rightly.setLayout(new BoxLayout(rightly, BoxLayout.Y_AXIS));
         rightly_down = new JPanel();
         
-        // 
-        /*추가시 
-         * leftly.add(추가소스); 시도
-         */
         left_c.add(leftly_main);
         left_c.add(leftly);
 
         mid_c.add(midly_main);
         mid_c.add(midly_menu);
 
-/* 
-        // 컨테이너 창 늘리는 기능
-        left_c.setBounds(0, 0, left_width, width);
-        mid_c.setBounds(left_width, 0, mid_width, width);
-        right_c.setBounds(left_width + mid_width, 0, right_width, height);
-        */
+        right_c.add(rightly_main);
+        right_c.add(rightly);
+
         gbc.gridx = 0;
-        gbc.weightx = 0.15; // 30% 가로 비율
+        gbc.weightx = 0.3; // 30% 가로 비율
         c.add(left_c, gbc);
         //c.add(left_c);
 
         gbc.gridx = 1;
-        gbc.weightx = 0.5; // 40% 가로 비율
+        gbc.weightx = 0.4; // 40% 가로 비율
         c.add(mid_c, gbc);
         //c.add(mid_c);
 
         gbc.gridx = 2;
-        gbc.weightx = 0.35; // 30% 가로 비율
+        gbc.weightx = 0.3; // 30% 가로 비율
         c.add(right_c, gbc);
         //c.add(right_c);
 
@@ -155,73 +157,154 @@ public class FE_KIOSK extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10); // 버튼 간격
-        //gbc.fill = GridBagConstraints.BOTH; // 버튼 크기를 고정
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1; // 가로로 균등 배치
-        gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.NONE; // 버튼이 자신의 크기를 유지하도록 설정
+        gbc.anchor = GridBagConstraints.NORTH; // 위쪽 정렬
+        gbc.weightx = 0; // 가로 가중치 제거
+        gbc.weighty = 0; // 세로 가중치 제거
 
-        for (int i = 0 ; i < menuList.size() ; i++){ 
+        // 마지막 행에 가중치를 주기 위한 더미 컴포넌트 추가 위치 계산
+        int lastRowIndex = (menuList.size() - 1) / 3;
+
+        for (int i = 0; i < menuList.size(); i++) {
             Menu menu = menuList.get(i);
 
-            try{
-                System.out.println(menu.imageUrl);
+            try {
                 URL url = new URL(menu.imageUrl);
                 JButton menubt = new JButton(
                     "<html>" + 
-                    "<img src='" + url + "' width='100' height='100'>" + "<br>" +
-                    //menu.imageUrl + "<br>" +
+                    "<div style='text-align: center;'>" +
+                    "<img src='" + url + "' width='100' height='100'><br>" +
                     menu.name + "<br>" + 
-                    menu.price + "<br>" + 
-                    "</html>");
+                    menu.price + "원" +
+                    "</div>" +
+                    "</html>"
+                );
                 menubt.addActionListener(e -> {
-                    // 클릭된 메뉴에 대한 처리를 여기에 추가
                     System.out.println("클릭된 메뉴: " + menu.name);
-                    // 예를 들어, 해당 메뉴의 상세 정보를 보여주거나 다른 작업을 할 수 있습니다.
+                    addmenulist(rightly, menu.name, menu.price, menu.imageUrl, menu.id, 1);
                 });
                 menubt.setEnabled(menu.available);
-                menubt.setPreferredSize(new Dimension(200, 100));
-                
+                menubt.setPreferredSize(new Dimension(150, 150));
+
                 gbc.gridx = i % 3; // 열 위치
                 gbc.gridy = i / 3; // 행 위치
+
+                // 마지막 행의 컴포넌트인 경우 나머지 공간을 채우도록 설정
+                if (gbc.gridy == lastRowIndex) {
+                    gbc.weighty = 1.0;
+                } else {
+                    gbc.weighty = 0.0;
+                }
+
                 midly.add(menubt, gbc);
 
             } catch (MalformedURLException e) {
-                System.err.println("잘못된 URL 형식: " + menu.imageUrl);
-                e.printStackTrace();  // 예외 출력
-            } catch (Exception e) {
-                System.err.println("URL 생성 중 예외 발생: " + menu.imageUrl);
-                e.printStackTrace();  // 다른 예외 출력
+                e.printStackTrace();
             }
-
         }
 
         midly.revalidate();
         midly.repaint();
-        mid_c.revalidate();
-        mid_c.repaint();
     }
 
-    public void load_data(){// 수정했을때 정상작동함 (id값 상관없이 데이터만 함) 데이터 분리 필요한것만 위치시킴
+    private void show_menu_list(JPanel rightly) {
+        rightly.removeAll();
+        
+        for (List<Order_list> orderListItems : orderList.values()) {
+            for (Order_list order : orderListItems) {
+                try {
+                    URL url = new URL(order.geturl());
+                    int total = order.getprice() * order.getnum();
+
+                    // 삭제 버튼 생성 및 이벤트 리스너 추가
+                    JButton deleteButton = new JButton("[x]");
+                    deleteButton.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            orderList.remove(order.getid());
+                            show_menu_list(rightly);
+                        }
+                    });
+
+                    // 메뉴 정보를 보여주는 라벨
+                    JLabel menuLabel = new JLabel(
+                        "<html>" +
+                        "<div style='width: 200px; font-size: 10px;'>" +
+                        "<table width='100%' cellpadding='0' cellspacing='0'>" +
+                        "<tr>" +
+                        "  <td rowspan='3' width='45'><img src='" + url + "' width='40' height='40'></td>" +
+                        "  <td style='padding: 0 2px;'>" + order.getname() + "</td>" +
+                        "  <td align='right' style='padding: 0 2px;'>" + total + "원</td>" +
+                        "</tr>" +
+                        "<tr>" +
+                        "  <td style='padding: 0 2px; color: #666;'>" + order.getprice() + "원</td>" +
+                        "  <td></td>" +
+                        "</tr>" +
+                        "<tr>" +
+                        "  <td style='padding: 0 2px;'>[-]" + order.getnum() + "[+]</td>" +
+                        "  <td align='right'></td>" +
+                        "</tr>" +
+                        "</table>" +
+                        "</div>" +
+                        "</html>"
+                    );
+
+                    JPanel itemPanel = new JPanel();
+                    itemPanel.setLayout(new BorderLayout());
+                    itemPanel.add(menuLabel, BorderLayout.CENTER);
+                    itemPanel.add(deleteButton, BorderLayout.EAST);
+                    rightly.add(itemPanel);
+                    
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                    System.out.println("URL 생성 중 오류 발생: " + e.getMessage());
+                }
+            }
+        }
+
+        right_c.revalidate();
+        right_c.repaint();
+    }
+
+
+    // 장바구니 리스트 표기
+    public void addmenulist(JPanel rightly, String name, int price, String imageUrl, String id, int num){
+        if (orderList.containsKey(id)){
+            List<Order_list> renew_order = orderList.get(id);
+            
+            for (Order_list order : renew_order) {
+                if (order.getid().equals(id)) {
+                    order.set_num(order.getnum() + num); // num을 1 증가
+                    return; // num 증가 후 더 이상 처리하지 않도록 리턴
+                }
+
+            }
+        }else{
+            Order_list list = new Order_list(name, price, imageUrl, id, 1);
+            orderList.putIfAbsent(id, new ArrayList<>());
+            orderList.get(id).add(list);
+        }
+        show_menu_list(rightly);
+    }
+
+
+    public void load_data(){//  
         
     }
 
-    public void conn_be(){ // 백엔드 연결 나중에 추가필요 #####################################################(postman)
-        // menudata_get
+    public void conn_be() {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
-                //.url("https://be-api-takaaaans-projects.vercel.app/api/category")
-                //.url("https://be-api-takaaaans-projects.vercel.app/api/menu?available=true&category=main-dish")
                 .url("https://be-api-takaaaans-projects.vercel.app/api/menu?available=true")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            // 서버 응답 받은 JSON 문자열
             String responseBody = response.body().string();
-            System.out.println(responseBody);
             JsonObject jsonResponse = new JsonParser().parse(responseBody).getAsJsonObject();
             JsonArray menuItemsArray = jsonResponse.getAsJsonArray("menuItems");
 
-            // 메뉴 항목 처리
+            menuData.clear(); // 기존 데이터 초기화
+
+            // 새 데이터 처리
             for (JsonElement element : menuItemsArray) {
                 JsonObject menuItemObj = element.getAsJsonObject();
                 String id = menuItemObj.get("_id").getAsString();
@@ -239,22 +322,28 @@ public class FE_KIOSK extends JFrame {
                 menuData.get(category).add(menu);
             }
 
-            // 카테고리별 메뉴 데이터 출력 테스트용
-            System.out.println("카테고리별 메뉴 데이터:");
-            for (String category : menuData.keySet()) {
-                System.out.println("카테고리: " + category);
-                for (Menu item : menuData.get(category)) {
-                    // 직접 item.name과 item.price로 접근
-                    System.out.println("  메뉴: " + item.name + ", 가격: " + item.price);
+            // 데이터 로딩이 완료된 후 EDT에서 UI 업데이트
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    // 카테고리 버튼 추가
+                    addcategorybt(leftly);
+                    
+                    // 첫 번째 카테고리의 메뉴 표시
+                    if (!menuData.isEmpty()) {
+                        String firstCategory = menuData.keySet().iterator().next();
+                        show_menu(firstCategory);
+                    }
                 }
-            }
-            
-            // 데이터 불러올 시 데이터 추가
-            addcategorybt(leftly);
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
         }     
     }
+
+
+
+    
 
     //카테고리 leftly에 동적 추가하는 부분 (처음에 leftly 부분 초기화후 새로고침시 다시 작동하게 하면 동적 수정 가능)
     private void addcategorybt(JPanel leftly){
@@ -269,8 +358,6 @@ public class FE_KIOSK extends JFrame {
             leftly.add(categoryButton);
         }
     
-        leftly.revalidate();
-        leftly.repaint();
         left_c.revalidate();
         left_c.repaint();
     }
@@ -278,9 +365,45 @@ public class FE_KIOSK extends JFrame {
     // 가운데 카테고리 버튼 클릭시 그 카테고리 정보 출력 JLabel로 나중에 사진 추가 가능
 
 
+    public class Order_list{
+        private String name;
+        private int price;
+        private String imageUrl;
+        private String id;
+        private int num;
 
-    private void handleMenuClick(){ //메뉴 클릭시 하는거
-        System.out.println("hi"); // 추가 필요########################################################
+        public Order_list(String name, int price, String imageUrl, String id, int num){
+            this.name = name;
+            this.price = price;
+            this.imageUrl = imageUrl;
+            this.id = id;
+            this.num = num;
+        }
+
+        public void set_num(int num){
+            this.num = num;
+        }
+
+        public String getid(){
+            return id;
+        }
+
+        public int getnum(){
+            return num;
+        }
+
+        public String geturl(){
+            return imageUrl;
+        }
+
+        public String getname(){
+            return name;
+        }
+
+        public int getprice(){
+            return price;
+        }
+
     }
 
     // menu class
