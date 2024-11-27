@@ -34,28 +34,29 @@ public class FE_KIOSK extends JFrame {
     private JPanel rightly_main;
     private JPanel rightly;
     private JPanel rightly_down;
+    String store_name = "카페 명"; // 나중에 입력받는 형태 로 지정가능
 
     // 카테고리 메뉴별 데이터(카테고리정보, 메뉴정보 포함)
     //private Timer timer; //
 
     public FE_KIOSK(){
-        int height = 1000;
-        int width = 500;
-        setTitle("키오스크");
-        setSize(height, width);
-        setResizable(true);
+        // 창 크기 설정 (1920x1020의 약 90%)
+        setSize(1728, 918);
+        
+        // 화면 중앙에 창 위치시키기
+        setLocationRelativeTo(null);
+        
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("키오스크");
 
         // 창 크기 지정 3개 컨테이너
-        int left_width = (int) (width * 0.3);
-        int mid_width = (int) (width * 0.3);
-        int right_width = (int) (width * 0.3);
+        int left_width = (int) (getWidth() * 0.3);
+        int mid_width = (int) (getWidth() * 0.3);
+        int right_width = (int) (getWidth() * 0.3);
         
 
         // 전체 화면 컨테이너
         c = getContentPane();
-        //c.setLayout(new FlowLayout());
-        //c.setLayout(new GridLayout(0, 3, 10, 10));
         c.setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -68,7 +69,7 @@ public class FE_KIOSK extends JFrame {
         left_c = new JPanel(); // 각 왼 중 오 컨테이너를 패널로 바꾸면 조절 가능
         left_c.setLayout(new BoxLayout(left_c, BoxLayout.Y_AXIS));
         // 왼쪽 컨테이너 크기 고정
-        Dimension leftSize = new Dimension((int)(width * 0.15), height);
+        Dimension leftSize = new Dimension((int)(getWidth() * 0.25), getHeight());
         left_c.setPreferredSize(leftSize);
         left_c.setMaximumSize(leftSize);
         left_c.setMinimumSize(leftSize);
@@ -76,7 +77,7 @@ public class FE_KIOSK extends JFrame {
         mid_c = new JPanel();
         mid_c.setLayout(new BoxLayout(mid_c, BoxLayout.Y_AXIS));
         // 중간 컨테이너 크기 고정
-        Dimension midSize = new Dimension((int)(width * 0.5), height);
+        Dimension midSize = new Dimension((int)(getWidth() * 0.5), getHeight());
         mid_c.setPreferredSize(midSize);
         mid_c.setMaximumSize(midSize);
         mid_c.setMinimumSize(midSize);
@@ -84,7 +85,7 @@ public class FE_KIOSK extends JFrame {
         right_c = new JPanel();
         right_c.setLayout(new BoxLayout(right_c, BoxLayout.Y_AXIS));
         // 오른쪽 컨테이너 크기 고정
-        Dimension rightSize = new Dimension((int)(width * 0.35), height);
+        Dimension rightSize = new Dimension((int)(getWidth() * 0.25), getHeight());
         right_c.setPreferredSize(rightSize);
         right_c.setMaximumSize(rightSize);
         right_c.setMinimumSize(rightSize);
@@ -117,14 +118,26 @@ public class FE_KIOSK extends JFrame {
         rightly.setLayout(new BoxLayout(rightly, BoxLayout.Y_AXIS));
         rightly_down = new JPanel();
         
+        // 스크롤 패널 추가 및 테두리 제거
+        JScrollPane rightlyScroll = new JScrollPane(rightly);
+        rightlyScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        rightlyScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        rightlyScroll.setBorder(BorderFactory.createEmptyBorder());  // 테두리 제거
+        rightlyScroll.getViewport().setBackground(rightly.getBackground());  // 배경색 통일
+
+        // 뷰포트 테두리도 제거
+        rightlyScroll.getViewport().setBorder(null);
+        
+        rightly_down = new JPanel();
+        
         left_c.add(leftly_main);
         left_c.add(leftly);
 
         mid_c.add(midly_main);
         mid_c.add(midly_menu);
 
-        right_c.add(rightly_main);
-        right_c.add(rightly);
+        right_c.add(rightlyScroll);  // rightly 대신 rightlyScroll 추가
+        right_c.add(rightly_down);
 
         gbc.gridx = 0;
         gbc.weightx = 0.3; // 30% 가로 비율
@@ -151,8 +164,17 @@ public class FE_KIOSK extends JFrame {
     }
 
     private void show_menu(String category){
-        midly.removeAll();
+        // midly_main에 카테고리 정보 업데이트
+        midly_main.removeAll();
+        JLabel titleLabel = new JLabel(
+            "<html>" + category + "<br>Choose Dishes</html>"
+        );
+        midly_main.add(titleLabel);
+        midly_main.revalidate();
+        midly_main.repaint();
 
+        // 기존의 메뉴 표시 로직
+        midly.removeAll();
         List<Menu> menuList = menuData.get(category);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -184,7 +206,7 @@ public class FE_KIOSK extends JFrame {
                     addmenulist(rightly, menu.name, menu.price, menu.imageUrl, menu.id, 1);
                 });
                 menubt.setEnabled(menu.available);
-                menubt.setPreferredSize(new Dimension(150, 150));
+                menubt.setPreferredSize(new Dimension(300, 300));
 
                 gbc.gridx = i % 3; // 열 위치
                 gbc.gridy = i / 3; // 행 위치
@@ -209,58 +231,149 @@ public class FE_KIOSK extends JFrame {
 
     private void show_menu_list(JPanel rightly) {
         rightly.removeAll();
-        
+        rightly.setLayout(new BoxLayout(rightly, BoxLayout.Y_AXIS));
+
         for (List<Order_list> orderListItems : orderList.values()) {
             for (Order_list order : orderListItems) {
                 try {
                     URL url = new URL(order.geturl());
                     int total = order.getprice() * order.getnum();
 
-                    // 삭제 버튼 생성 및 이벤트 리스너 추가
-                    JButton deleteButton = new JButton("[x]");
-                    deleteButton.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            orderList.remove(order.getid());
-                            show_menu_list(rightly);
+                    // 메인 패널
+                    JPanel itemPanel = new JPanel();
+                    itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
+                    itemPanel.setPreferredSize(new Dimension(400, 160));  // 세로 크기 160으로 감소
+                    itemPanel.setMaximumSize(new Dimension(400, 160));
+                    itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));  // 상하 여백 추가
+
+                    // 상단 패널
+                    JPanel topPanel = new JPanel(new BorderLayout(10, 0));
+                    
+                    // 이미지
+                    JLabel imageLabel = new JLabel(new ImageIcon(new ImageIcon(url).getImage()
+                        .getScaledInstance(60, 60, Image.SCALE_SMOOTH)));
+                    
+                    // 중앙 정보 패널
+                    JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+                    JLabel nameLabel = new JLabel(order.getname());
+                    JLabel priceLabel = new JLabel(order.getprice() + "원");
+                    infoPanel.add(nameLabel);
+                    infoPanel.add(priceLabel);
+
+                    // 총액 라벨 패널 수정
+                    JPanel totalPanel = new JPanel();
+                    totalPanel.setLayout(new BoxLayout(totalPanel, BoxLayout.Y_AXIS));
+                    
+                    JLabel totalLabel = new JLabel(total + "원");
+                    totalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);  // 가운데 정렬
+                    totalPanel.add(Box.createVerticalGlue());  // 상단 여백
+                    totalPanel.add(totalLabel);
+                    totalPanel.add(Box.createVerticalGlue());  // 하단 여백
+
+                    topPanel.add(imageLabel, BorderLayout.WEST);
+                    topPanel.add(infoPanel, BorderLayout.CENTER);
+                    topPanel.add(totalPanel, BorderLayout.EAST);
+
+                    // 하단 패널
+                    JPanel bottomPanel = new JPanel(new BorderLayout());
+                    bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));  // 하단 여백 10으로 감소
+                    
+                    // 수량 조절 패널 (왼쪽)
+                    JPanel quantityPanel = new JPanel();
+                    quantityPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 0));
+
+                    // 버튼 크기 정의
+                    Dimension buttonSize = new Dimension(50, 50);
+
+                    // 수량 라벨
+                    JLabel quantityLabel = new JLabel(String.valueOf(order.getnum()));
+                    quantityLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+
+                    // 총 가격 라벨
+                    JLabel totalPriceLabel = new JLabel(String.format("%d원", order.getprice() * order.getnum()));
+
+                    // 마이너스 버튼
+                    JButton minusButton = new JButton("-");
+                    minusButton.setPreferredSize(new Dimension(50, 50));
+                    minusButton.addActionListener(e -> {
+                        int currentQuantity = order.getnum();
+                        if (currentQuantity > 1) {
+                            order.set_num(currentQuantity - 1);
+                            show_menu_list(rightly);  // 전체 리스트 갱신
                         }
                     });
 
-                    // 메뉴 정보를 보여주는 라벨
-                    JLabel menuLabel = new JLabel(
-                        "<html>" +
-                        "<div style='width: 200px; font-size: 10px;'>" +
-                        "<table width='100%' cellpadding='0' cellspacing='0'>" +
-                        "<tr>" +
-                        "  <td rowspan='3' width='45'><img src='" + url + "' width='40' height='40'></td>" +
-                        "  <td style='padding: 0 2px;'>" + order.getname() + "</td>" +
-                        "  <td align='right' style='padding: 0 2px;'>" + total + "원</td>" +
-                        "</tr>" +
-                        "<tr>" +
-                        "  <td style='padding: 0 2px; color: #666;'>" + order.getprice() + "원</td>" +
-                        "  <td></td>" +
-                        "</tr>" +
-                        "<tr>" +
-                        "  <td style='padding: 0 2px;'>[-]" + order.getnum() + "[+]</td>" +
-                        "  <td align='right'></td>" +
-                        "</tr>" +
-                        "</table>" +
-                        "</div>" +
-                        "</html>"
-                    );
+                    // 플러스 버튼
+                    JButton plusButton = new JButton("+");
+                    plusButton.setPreferredSize(new Dimension(50, 50));
+                    plusButton.addActionListener(e -> {
+                        int currentQuantity = order.getnum();
+                        if (currentQuantity < 99) {
+                            order.set_num(currentQuantity + 1);
+                            show_menu_list(rightly);  // 전체 리스트 갱신
+                        }
+                    });
 
-                    JPanel itemPanel = new JPanel();
-                    itemPanel.setLayout(new BorderLayout());
-                    itemPanel.add(menuLabel, BorderLayout.CENTER);
-                    itemPanel.add(deleteButton, BorderLayout.EAST);
+                    quantityPanel.add(minusButton);
+                    quantityPanel.add(quantityLabel);
+                    quantityPanel.add(plusButton);
+
+                    // 삭제 버튼 패널 (오른쪽)
+                    JPanel deletePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                    JButton deleteButton = new JButton("삭제");
+                    deleteButton.setPreferredSize(buttonSize);
+                    deleteButton.addActionListener(e -> {
+                        orderList.remove(order.getid());
+                        show_menu_list(rightly);
+                    });
+                    deletePanel.add(deleteButton);
+
+                    bottomPanel.add(quantityPanel, BorderLayout.WEST);
+                    bottomPanel.add(deletePanel, BorderLayout.EAST);
+
+                    itemPanel.add(topPanel);
+                    itemPanel.add(bottomPanel);
+
                     rightly.add(itemPanel);
-                    
+                    rightly.add(Box.createVerticalStrut(5));  // 메뉴 간 간격 5로 감소
+
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    System.out.println("URL 생성 중 오류 발생: " + e.getMessage());
                 }
             }
         }
 
+        // rightly_down 패널에 총 가격 표시
+        rightly_down.removeAll();
+        rightly_down.setLayout(new BoxLayout(rightly_down, BoxLayout.Y_AXIS));
+
+        // orderList에서 직접 총 가격 계산
+        int totalPrice = 0;
+        for (List<Order_list> orderListItems : orderList.values()) {
+            for (Order_list order : orderListItems) {
+                totalPrice += order.getprice() * order.getnum();
+            }
+        }
+
+        // 총 가격 표시
+        JLabel totalPriceLabel = new JLabel(String.format("총 주문금액: %,d원", totalPrice));
+        totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
+        totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 결제하기 버튼
+        JButton orderButton = new JButton("결제하기");
+        orderButton.setPreferredSize(new Dimension(150, 50));
+        orderButton.setMaximumSize(new Dimension(150, 50));
+        orderButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        rightly_down.add(Box.createVerticalStrut(10));
+        rightly_down.add(totalPriceLabel);
+        rightly_down.add(Box.createVerticalStrut(10));
+        rightly_down.add(orderButton);
+        rightly_down.add(Box.createVerticalStrut(10));
+
+        rightly_down.revalidate();
+        rightly_down.repaint();
         right_c.revalidate();
         right_c.repaint();
     }
@@ -273,12 +386,12 @@ public class FE_KIOSK extends JFrame {
             
             for (Order_list order : renew_order) {
                 if (order.getid().equals(id)) {
-                    order.set_num(order.getnum() + num); // num을 1 증가
-                    return; // num 증가 후 더 이상 처리하지 않도록 리턴
+                    order.set_num(order.getnum() + num); // num을 증가
+                    show_menu_list(rightly); // 변경 사항을 반영하기 위해 show_menu_list 호출
+                    return;
                 }
-
             }
-        }else{
+        } else {
             Order_list list = new Order_list(name, price, imageUrl, id, 1);
             orderList.putIfAbsent(id, new ArrayList<>());
             orderList.get(id).add(list);
@@ -328,10 +441,10 @@ public class FE_KIOSK extends JFrame {
                     // 카테고리 버튼 추가
                     addcategorybt(leftly);
                     
-                    // 첫 번째 카테고리의 메뉴 표시
+                    //  번째 카테고의 메뉴 표시
                     if (!menuData.isEmpty()) {
                         String firstCategory = menuData.keySet().iterator().next();
-                        show_menu(firstCategory);
+                        show_menu(firstCategory);  // 여기서 자동으 midly_main도 업데이트됨
                     }
                 }
             });
@@ -350,6 +463,8 @@ public class FE_KIOSK extends JFrame {
         leftly.removeAll();
         for (String category : menuData.keySet()) {
             JButton categoryButton = new JButton(category);
+            categoryButton.setPreferredSize(new Dimension(200, 80));
+            categoryButton.setFont(new Font(categoryButton.getFont().getName(), Font.BOLD, 18));
             categoryButton.addActionListener(e -> {
                 System.out.println("카테고리 버튼 클릭: " + category);
                 // 카테고리 버튼 클릭시 로직
@@ -430,18 +545,16 @@ public class FE_KIOSK extends JFrame {
     }
 
     private void basic_load(JPanel leftly_main){
+        // 상점 이름 라벨 생성
+        JLabel storeLabel = new JLabel(store_name);
+        
         Date currentDate = new Date();
-        
-        // 날짜 포맷 설정
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy - MM - dd");
-        
-        // 날짜 형식에 맞춰서 문자열로 변환
         String formattedDate = dateFormat.format(currentDate);
-
-        // 날짜를 JLabel로 표시
         JLabel dateLabel = new JLabel(formattedDate);
 
-        // leftly_main 패널에 날짜 레이블 추가
+        // leftly_main 패널에 상점명과 날짜 라벨 추가
+        leftly_main.add(storeLabel);
         leftly_main.add(dateLabel);
 
         // 레이아웃 갱신
