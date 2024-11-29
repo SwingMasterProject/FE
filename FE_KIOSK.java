@@ -140,17 +140,17 @@ public class FE_KIOSK extends JFrame {
         right_c.add(rightly_down);
 
         gbc.gridx = 0;
-        gbc.weightx = 0.3; // 30% 가로 비율
+        gbc.weightx = 0.325; // 30% 가로 비율
         c.add(left_c, gbc);
         //c.add(left_c);
 
         gbc.gridx = 1;
-        gbc.weightx = 0.4; // 40% 가로 비율
+        gbc.weightx = 0.35; // 40% 가로 비율
         c.add(mid_c, gbc);
         //c.add(mid_c);
 
         gbc.gridx = 2;
-        gbc.weightx = 0.3; // 30% 가로 비율
+        gbc.weightx = 0.325; // 30% 가로 비율
         c.add(right_c, gbc);
         //c.add(right_c);
 
@@ -178,11 +178,11 @@ public class FE_KIOSK extends JFrame {
         List<Menu> menuList = menuData.get(category);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10); // 버튼 간격
-        gbc.fill = GridBagConstraints.NONE; // 버튼이 자신의 크기를 유지하도록 설정
-        gbc.anchor = GridBagConstraints.NORTH; // 위쪽 정렬
-        gbc.weightx = 0; // 가로 가중치 제거
-        gbc.weighty = 0; // 세로 가중치 제거
+        gbc.insets = new Insets(30, 30, 30, 30);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
 
         // 마지막 행에 가중치를 주기 위한 더미 컴포넌트 추가 위치 계산
         int lastRowIndex = (menuList.size() - 1) / 3;
@@ -195,9 +195,9 @@ public class FE_KIOSK extends JFrame {
                 JButton menubt = new JButton(
                     "<html>" + 
                     "<div style='text-align: center;'>" +
-                    "<img src='" + url + "' width='100' height='100'><br>" +
-                    menu.name + "<br>" + 
-                    menu.price + "원" +
+                    "<img src='" + url + "' width='150' height='150'><br>" +  // 이미지 크기 150x150으로 증가
+                    "<span style='font-size: 16px;'>" + menu.name + "</span><br>" +  // 글자 크기 증가
+                    "<span style='font-size: 14px;'>" + menu.price + "원</span>" +  // 가격 글자 크기 증가
                     "</div>" +
                     "</html>"
                 );
@@ -206,12 +206,12 @@ public class FE_KIOSK extends JFrame {
                     addmenulist(rightly, menu.name, menu.price, menu.imageUrl, menu.id, 1);
                 });
                 menubt.setEnabled(menu.available);
-                menubt.setPreferredSize(new Dimension(300, 300));
+                menubt.setPreferredSize(new Dimension(400, 400));  // 버튼 크기를 400x400으로 증가
 
                 gbc.gridx = i % 3; // 열 위치
                 gbc.gridy = i / 3; // 행 위치
 
-                // 마지막 행의 컴포넌트인 경우 나머지 공간을 채우도록 설정
+                // 마지막 행의 ���포넌트인 경우 나머지 공간을 채우도록 설정
                 if (gbc.gridy == lastRowIndex) {
                     gbc.weighty = 1.0;
                 } else {
@@ -242,8 +242,8 @@ public class FE_KIOSK extends JFrame {
                     // 메인 패널
                     JPanel itemPanel = new JPanel();
                     itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
-                    itemPanel.setPreferredSize(new Dimension(400, 160));  // 세로 크기 160으로 감소
-                    itemPanel.setMaximumSize(new Dimension(400, 160));
+                    itemPanel.setPreferredSize(new Dimension(400, 180));  // 높이를 160에서 180으로 증가
+                    itemPanel.setMaximumSize(new Dimension(400, 180));    // 최대 크기도 같이 조정
                     itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));  // 상하 여백 추가
 
                     // 상단 패널
@@ -274,7 +274,7 @@ public class FE_KIOSK extends JFrame {
                     topPanel.add(infoPanel, BorderLayout.CENTER);
                     topPanel.add(totalPanel, BorderLayout.EAST);
 
-                    // 하단 패널
+                    // 하 패널
                     JPanel bottomPanel = new JPanel(new BorderLayout());
                     bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));  // 하단 여백 10으로 감소
                     
@@ -332,6 +332,7 @@ public class FE_KIOSK extends JFrame {
                     bottomPanel.add(deletePanel, BorderLayout.EAST);
 
                     itemPanel.add(topPanel);
+                    itemPanel.add(Box.createVerticalStrut(20));  // 20픽셀 간격
                     itemPanel.add(bottomPanel);
 
                     rightly.add(itemPanel);
@@ -356,8 +357,8 @@ public class FE_KIOSK extends JFrame {
         }
 
         // 총 가격 표시
-        JLabel totalPriceLabel = new JLabel(String.format("총 주문금액: %,d원", totalPrice));
-        totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
+        JLabel totalPriceLabel = new JLabel(String.format("Total Price %,d원", totalPrice));
+        //totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
         totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // 결제하기 버튼
@@ -365,6 +366,17 @@ public class FE_KIOSK extends JFrame {
         orderButton.setPreferredSize(new Dimension(150, 50));
         orderButton.setMaximumSize(new Dimension(150, 50));
         orderButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 결제하기 버튼 클릭 이벤트
+        orderButton.addActionListener(e -> {
+            System.out.println("결제하기 버튼 클릭됨");
+            //System.out.println("총 결제 금액: " + totalPrice + "원");
+            send_order();  // API 요청 전송
+            
+            // 주문 완료 후 장바구니 비우기
+            orderList.clear();
+            show_menu_list(rightly);  // UI 갱신
+        });
 
         rightly_down.add(Box.createVerticalStrut(10));
         rightly_down.add(totalPriceLabel);
@@ -454,9 +466,65 @@ public class FE_KIOSK extends JFrame {
         }     
     }
 
-
-
-    
+    public void send_order() {
+        try {
+            // JSON 객체 생성
+            JsonObject jsonOrder = new JsonObject();
+            JsonArray orderItems = new JsonArray();
+            
+            // 총 가격 계산
+            int totalPrice = 0;
+            
+            // orderList의 각 아이템을 JSON 형식으로 변환
+            for (List<Order_list> orderListItems : orderList.values()) {
+                for (Order_list order : orderListItems) {
+                    JsonObject item = new JsonObject();
+                    item.addProperty("menuId", order.getid());
+                    item.addProperty("name", order.getname());
+                    item.addProperty("quantity", order.getnum());
+                    item.addProperty("price", order.getprice()*order.getnum());
+                    
+                    // 개별 주문의 총 가격 계산
+                    totalPrice += order.getprice() * order.getnum();
+                    
+                    orderItems.add(item);
+                }
+            }
+            
+            // JSON 객체에 데이터 추가
+            jsonOrder.add("orderItems", orderItems);
+            jsonOrder.addProperty("totalPrice", totalPrice);
+            
+            // 보낼 JSON 데이터 출력
+            System.out.println("전송할 JSON 데이터:");
+            System.out.println(jsonOrder.toString());
+            System.out.println("전송 URL: https://be-api-takaaaans-projects.vercel.app/api/table/new_order?tableNum=" + table_num);
+            
+            // API 요청 부분 주석 처리
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, jsonOrder.toString());
+            
+            Request request = new Request.Builder()
+                .url("https://be-api-takaaaans-projects.vercel.app/api/table/new_order?tableNum=" + table_num)
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
+                .build();
+                
+            Response response = client.newCall(request).execute();
+            
+            if (response.isSuccessful()) {
+                System.out.println("주문이 성공적으로 전송되었습니다.");
+            } else {
+                System.out.println("주문 전송 실패: " + response.code());
+            }
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("주문 전송 중 오류 발생: " + e.getMessage());
+        }
+    }
 
     //카테고리 leftly에 동적 추가하는 부분 (처음에 leftly 부분 초기화후 새로고침시 다시 작동하게 하면 동적 수정 가능)
     private void addcategorybt(JPanel leftly){
