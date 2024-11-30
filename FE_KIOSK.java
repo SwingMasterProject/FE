@@ -28,6 +28,8 @@ public class FE_KIOSK extends JFrame {
     private Container right_c;
     private JPanel leftly_main;
     private JPanel leftly;
+    private JPanel leftly_down;
+    private JPanel left_L;
     private JPanel midly_main;
     private JPanel midly;
     private JScrollPane midly_menu;
@@ -35,6 +37,7 @@ public class FE_KIOSK extends JFrame {
     private JPanel rightly;
     private JPanel rightly_down;
     String store_name = "카페 명"; // 나중에 입력받는 형태 로 지정가능
+    private int total_price = 0;
 
     // 카테고리 메뉴별 데이터(카테고리정보, 메뉴정보 포함)
     //private Timer timer; //
@@ -94,11 +97,20 @@ public class FE_KIOSK extends JFrame {
 
         // 카테고리부분 왼쪽
         leftly_main = new JPanel();
-        leftly_main.setLayout(new BoxLayout(leftly_main, BoxLayout.Y_AXIS));
+        leftly_main.setLayout(new FlowLayout(FlowLayout.LEFT));
+        
+        
         leftly = new JPanel();
         leftly.setLayout(new BoxLayout(leftly, BoxLayout.Y_AXIS)); // basic_load(leftly_main);
-        basic_load(leftly_main);
-        conn_be();
+
+        leftly_down = new JPanel();
+        leftly_down.setLayout(new FlowLayout(FlowLayout.RIGHT));
+
+        //left_L = new JPanel(new GridBagLayout());
+
+
+
+        
         
         // 메뉴 보이는 부분 중간
         midly_main = new JPanel();
@@ -129,9 +141,14 @@ public class FE_KIOSK extends JFrame {
         rightlyScroll.getViewport().setBorder(null);
         
         rightly_down = new JPanel();
+
+        
+        
         
         left_c.add(leftly_main);
         left_c.add(leftly);
+        left_c.add(leftly_down);
+        
 
         mid_c.add(midly_main);
         mid_c.add(midly_menu);
@@ -155,7 +172,8 @@ public class FE_KIOSK extends JFrame {
         //c.add(right_c);
 
         // 기본 데이터 로드
-        load_data();
+        basic_load(leftly_main, leftly_down);
+        conn_be();
 
         // 카테고리 버튼 추가
         //addcategorybt(leftly);
@@ -163,20 +181,35 @@ public class FE_KIOSK extends JFrame {
         setVisible(true);
     }
 
-    private void show_menu(String category){
+    private void show_menu(String category) {
         // midly_main에 카테고리 정보 업데이트
         midly_main.removeAll();
         JLabel titleLabel = new JLabel(
-            "<html>" + category + "<br>Choose Dishes</html>"
+            "<html>" + "<br><br>" +
+            "<div style='text-align: left; margin-left: 20px;'>" +  // 왼쪽 정렬 및 여백 추가
+            "<span style='font-size: 28px; font-weight: bold;'>" + category + "</span>" +
+            "<br><br><br><br>" +
+            "<span style='font-size: 18px;'>Choose Dishes</span>" +
+            "<br><br>" +
+            "</div>" +
+            "</html>"
         );
+        titleLabel.setHorizontalAlignment(JLabel.LEFT);  // JLabel 자체도 왼쪽 정렬
         midly_main.add(titleLabel);
         midly_main.revalidate();
         midly_main.repaint();
 
-        // 기존의 메뉴 표시 로직
+        // midly 패널 설정
         midly.removeAll();
-        List<Menu> menuList = menuData.get(category);
+        midly.setLayout(new GridBagLayout());
+        
+        // 스크롤 동작을 위한 추가 설정
+        midly.setPreferredSize(new Dimension(
+            midly.getPreferredSize().width,
+            Math.max(500, (menuData.get(category).size() / 3 + 1) * 450)
+        ));
 
+        List<Menu> menuList = menuData.get(category);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(30, 30, 30, 30);
         gbc.fill = GridBagConstraints.NONE;
@@ -195,7 +228,7 @@ public class FE_KIOSK extends JFrame {
                 JButton menubt = new JButton(
                     "<html>" + 
                     "<div style='text-align: center;'>" +
-                    "<img src='" + url + "' width='150' height='150'><br>" +  // 이미지 크기 150x150으로 증가
+                    "<img src='" + url + "' width='150' height='150'><br><br>" +  // 이미지 크기 150x150으로 증가
                     "<span style='font-size: 16px;'>" + menu.name + "</span><br>" +  // 글자 크기 증가
                     "<span style='font-size: 14px;'>" + menu.price + "원</span>" +  // 가격 글자 크기 증가
                     "</div>" +
@@ -211,7 +244,7 @@ public class FE_KIOSK extends JFrame {
                 gbc.gridx = i % 3; // 열 위치
                 gbc.gridy = i / 3; // 행 위치
 
-                // 마지막 행의 ���포넌트인 경우 나머지 공간을 채우도록 설정
+                // 마지막 행의 포넌트인 경우 나머지 공간을 채우도록 설정
                 if (gbc.gridy == lastRowIndex) {
                     gbc.weighty = 1.0;
                 } else {
@@ -344,7 +377,8 @@ public class FE_KIOSK extends JFrame {
             }
         }
 
-        // rightly_down 패널에 총 가격 표시
+        /*
+        // rightly_down 패널에 총 가격 표시 여기 삭제제
         rightly_down.removeAll();
         rightly_down.setLayout(new BoxLayout(rightly_down, BoxLayout.Y_AXIS));
 
@@ -377,6 +411,8 @@ public class FE_KIOSK extends JFrame {
             orderList.clear();
             show_menu_list(rightly);  // UI 갱신
         });
+        
+        total_price();
 
         rightly_down.add(Box.createVerticalStrut(10));
         rightly_down.add(totalPriceLabel);
@@ -386,8 +422,55 @@ public class FE_KIOSK extends JFrame {
 
         rightly_down.revalidate();
         rightly_down.repaint();
+        */
+        total_price();
+
         right_c.revalidate();
         right_c.repaint();
+    }
+
+    public void total_price(){
+        // rightly_down 패널에 총 가격 표시 여기 삭제제
+        rightly_down.removeAll();
+        rightly_down.setLayout(new BoxLayout(rightly_down, BoxLayout.Y_AXIS));
+
+        // orderList에서 직접 총 가격 계산
+        int totalPrice = 0;
+        for (List<Order_list> orderListItems : orderList.values()) {
+            for (Order_list order : orderListItems) {
+                totalPrice += order.getprice() * order.getnum();
+            }
+        }
+
+        // 총 가격 표시
+        JLabel totalPriceLabel = new JLabel(String.format("Total Price %,d원", totalPrice));
+        //totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
+        totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 결제하기 버튼
+        JButton orderButton = new JButton("결제하기");
+        orderButton.setPreferredSize(new Dimension(150, 50));
+        orderButton.setMaximumSize(new Dimension(150, 50));
+        orderButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // 결제하기 버튼 클릭 이벤트
+        orderButton.addActionListener(e -> {
+            System.out.println("결제하기 버튼 클릭됨");
+            //System.out.println("총 결제 금액: " + totalPrice + "원");
+            send_order();  // API 요청 전송
+            
+            // 주문 완료 후 장바구니 비우기
+            orderList.clear();
+            show_menu_list(rightly);  // UI 갱신
+        });
+        rightly_down.add(Box.createVerticalStrut(10));
+        rightly_down.add(totalPriceLabel);
+        rightly_down.add(Box.createVerticalStrut(10));
+        rightly_down.add(orderButton);
+        rightly_down.add(Box.createVerticalStrut(10));
+
+        rightly_down.revalidate();
+        rightly_down.repaint();
     }
 
 
@@ -442,7 +525,7 @@ public class FE_KIOSK extends JFrame {
                 // Menu 객체 생성
                 Menu menu = new Menu(id, name, price, imageUrl, available, category);
 
-                // 카테고리별 메뉴 리스트에 추가
+                // 카고리별 메뉴 리스트에 추가
                 menuData.putIfAbsent(category, new ArrayList<>());
                 menuData.get(category).add(menu);
             }
@@ -468,6 +551,12 @@ public class FE_KIOSK extends JFrame {
 
     public void send_order() {
         try {
+            // orderList가 비어있는지 확인
+            if (orderList.isEmpty()) {
+                System.out.println("주문 목록이 비어있습니다.");
+                return;  // 메소드 종료
+            }
+
             // JSON 객체 생성
             JsonObject jsonOrder = new JsonObject();
             JsonArray orderItems = new JsonArray();
@@ -514,7 +603,9 @@ public class FE_KIOSK extends JFrame {
             Response response = client.newCall(request).execute();
             
             if (response.isSuccessful()) {
-                System.out.println("주문이 성공적으로 전송되었습니다.");
+                System.out.println("주문이 성공적으로 전송되었��니다.");
+                // 주문 성공 시 orderList 비우기
+                orderList.clear();
             } else {
                 System.out.println("주문 전송 실패: " + response.code());
             }
@@ -527,25 +618,66 @@ public class FE_KIOSK extends JFrame {
     }
 
     //카테고리 leftly에 동적 추가하는 부분 (처음에 leftly 부분 초기화후 새로고침시 다시 작동하게 하면 동적 수정 가능)
-    private void addcategorybt(JPanel leftly){
+    private void addcategorybt(JPanel leftly) {
         leftly.removeAll();
+        //leftly.setBorder(BorderFactory.createLineBorder(Color.RED, 2));// 테두리 확인용
+        leftly.setLayout(new BoxLayout(leftly, BoxLayout.Y_AXIS));
+        
+        // 상단 여백 추가
+        leftly.add(Box.createVerticalStrut(20));
+        
         for (String category : menuData.keySet()) {
-            JButton categoryButton = new JButton(category);
-            categoryButton.setPreferredSize(new Dimension(200, 80));
-            categoryButton.setFont(new Font(categoryButton.getFont().getName(), Font.BOLD, 18));
+            // 버튼을 감싸는 패널 생성
+            JPanel buttonPanel = new JPanel(new BorderLayout());
+            buttonPanel.setPreferredSize(new Dimension(300, 70));
+            buttonPanel.setMaximumSize(new Dimension(300, 70));
+            
+            // 버튼 생성
+            JButton categoryButton = new JButton();
+            categoryButton.setLayout(new BorderLayout());
+            
+            // 텍스트를 오른쪽 정렬로 설정하고 크기 키우기
+            JLabel textLabel = new JLabel(category);
+            textLabel.setHorizontalAlignment(JLabel.RIGHT);
+            textLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 30));
+            textLabel.setFont(textLabel.getFont().deriveFont(18.0f));  // 기존 폰트의 크만 18로 키우
+            
+            // 구분선 추가
+            JSeparator separator = new JSeparator();
+            separator.setForeground(new Color(255, 99, 71));
+            
+            // 버튼에 컴포넌트 추가
+            categoryButton.add(textLabel, BorderLayout.CENTER);
+            
+            // 버튼 스타일링
+            categoryButton.setBorderPainted(false);
+            categoryButton.setContentAreaFilled(false);
+            categoryButton.setFocusPainted(false);
+            
+            // 클릭 이벤트 추가
             categoryButton.addActionListener(e -> {
-                System.out.println("카테고리 버튼 클릭: " + category);
-                // 카테고리 버튼 클릭시 로직
+                System.out.println("카테리 버튼 클릭: " + category);
                 show_menu(category);
             });
-            leftly.add(categoryButton);
+            
+            // 패널에 버튼과 구분선 추가
+            buttonPanel.add(categoryButton, BorderLayout.CENTER);
+            buttonPanel.add(separator, BorderLayout.SOUTH);
+            
+            // leftly에 패널 추가
+            leftly.add(buttonPanel);
+            
+            // 버튼 사이 여백 추가
+            leftly.add(Box.createVerticalStrut(15));
         }
-    
-        left_c.revalidate();
-        left_c.repaint();
+        
+        // 남은 공간을 채우기 위한 빈 패널 추가
+        leftly.add(Box.createVerticalGlue());
+        
+        leftly.revalidate();
+        leftly.repaint();
     }
-    // 여기 html 태그 사용가능 css도 가능하지만 부분적으로 불가능할 수 있다고 함 ..(확인필요)
-    // 가운데 카테고리 버튼 클릭시 그 카테고리 정보 출력 JLabel로 나중에 사진 추가 가능
+    
 
 
     public class Order_list{
@@ -612,22 +744,48 @@ public class FE_KIOSK extends JFrame {
         
     }
 
-    private void basic_load(JPanel leftly_main){
-        // 상점 이름 라벨 생성
-        JLabel storeLabel = new JLabel(store_name);
+    private void basic_load(JPanel leftly_main, JPanel leftly_down) {
+        // HTML을 사용한 스타일링
+        String htmlContent = String.format("<html>" +
+            "<div style='text-align: center;'>" +
+            "<h1 style='font-size: 24px; color: #333;'>%s</h1>" +
+            "<p style='font-size: 16px; color: #666;'>%s</p>" +
+            "</div>" +
+            "</html>", 
+            store_name,  // 상점 이름
+            new SimpleDateFormat("yyyy - MM - dd").format(new Date())  // 날짜
+        );
+
+        // HTML 컨텐츠를 표시할 JLabel 생성
+        JLabel contentLabel = new JLabel(htmlContent);
+        contentLabel.setHorizontalAlignment(JLabel.CENTER);
         
-        Date currentDate = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy - MM - dd");
-        String formattedDate = dateFormat.format(currentDate);
-        JLabel dateLabel = new JLabel(formattedDate);
-
-        // leftly_main 패널에 상점명과 날짜 라벨 추가
-        leftly_main.add(storeLabel);
-        leftly_main.add(dateLabel);
-
+        // leftly_main 패널에 라벨 추가
+        leftly_main.removeAll();
+        leftly_main.add(contentLabel);
+        
         // 레이아웃 갱신
         leftly_main.revalidate();
         leftly_main.repaint();
+
+        // leftly_down 패널에 버튼 추가
+        leftly_down.setLayout(new FlowLayout(FlowLayout.RIGHT)); // 오른쪽 정렬
+
+        JButton homeButton = new JButton("Home");
+        JButton textButton = new JButton("Text");
+        JButton checkButton = new JButton("Check");
+
+        leftly_down.add(homeButton);
+        leftly_down.add(textButton);
+        leftly_down.add(checkButton);
+
+        // 레이아웃 갱신
+        leftly_down.revalidate();
+        leftly_down.repaint();
+
+        // 주문쪽 상시표시
+        total_price();
+
     }
 
     public static void main(String[] args){
