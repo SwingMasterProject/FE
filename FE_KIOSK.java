@@ -22,6 +22,7 @@ public class FE_KIOSK extends JFrame {
     private int table_num = 2;
     private Map<String, List<Menu>> menuData = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList = new LinkedHashMap<>();
+    private Map<String, Integer[]> check = new LinkedHashMap<>();
     private Container c;
     private Container left_c;
     private Container mid_c;
@@ -191,6 +192,87 @@ public class FE_KIOSK extends JFrame {
         //addcategorybt(leftly);
 
         setVisible(true);
+    }
+
+    public void show_check(){
+        System.out.println("check");
+        midly_main.removeAll();
+    midly.removeAll();
+    midly_down.removeAll();
+    midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 800));
+    midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+    
+    // Message 타이틀 추가
+    JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JLabel titleLabel = new JLabel("Check");
+    titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
+    titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    titlePanel.add(titleLabel);
+    midly_main.add(titlePanel);
+
+    // 메시지를 담을 패널
+    JPanel messageContainer = new JPanel();
+    messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
+    
+    // 스크롤 패널 설정
+    JScrollPane scrollPane = new JScrollPane(messageContainer);
+    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+    scrollPane.setBorder(null);
+    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+    
+    // midly 패널 설정
+    midly.setLayout(new BorderLayout());
+    midly.add(scrollPane, BorderLayout.CENTER);
+
+    // check 데이터 표시
+    int totalSum = 0;
+    for (Map.Entry<String, Integer[]> entry : check.entrySet()) {
+        JPanel messagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        JLabel messageLabel = new JLabel(
+        "<html><div style='background: #4F90FF; " +
+        "color: white; " +
+        "padding: 15px 25px; " +
+        "border-radius: 20px; " +
+        "margin: 10px 20px; " +
+        "font-family: Arial; " +
+        "font-size: 14px; " +
+        "max-width: 400px; " +
+        "word-wrap: break-word;'>" +
+        String.format("%s - %d개 - %,d원", 
+            entry.getKey(), 
+            entry.getValue()[0], 
+            entry.getValue()[1]) +
+        "</div></html>"
+    );
+        messagePanel.add(messageLabel);
+        messageContainer.add(messagePanel);
+        totalSum += entry.getValue()[1];
+    }
+
+    midly.revalidate();
+    if (midly.getPreferredSize().height > 800) {
+    midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+    
+        // 스크롤을 최하단으로 이동
+        SwingUtilities.invokeLater(() -> {
+            JScrollBar vertical = midly_menu.getVerticalScrollBar();
+            vertical.setValue(vertical.getMaximum());
+        });
+    }
+
+    // 총액 표시
+    JLabel totalLabel = new JLabel(String.format("Total Price = %,d원", totalSum));
+    totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 16));
+    midly_down.add(totalLabel);
+
+    // UI 갱신
+    midly_main.revalidate();
+    midly_main.repaint();
+    midly.revalidate();
+    midly.repaint();
+    midly_down.revalidate();
+    midly_down.repaint();
     }
 
     private void show_menu(String category) {
@@ -733,6 +815,12 @@ public class FE_KIOSK extends JFrame {
                     
                     // 개별 주문의 총 가격 계산
                     totalPrice += order.getprice() * order.getnum();
+
+                    Integer[] values = check.containsKey(order.getname()) ? 
+                        check.get(order.getname()) : new Integer[]{0, 0};
+                    values[0] += order.getnum();
+                    values[1] += order.getprice() * order.getnum();
+                    check.put(order.getname(), values);
                     
                     orderItems.add(item);
                 }
@@ -762,6 +850,9 @@ public class FE_KIOSK extends JFrame {
             
             if (response.isSuccessful()) {
                 System.out.println("주문이 성공적으로 전송되었니다.");
+                // 주문 성공 시 check 채우기 확인
+                check.forEach((menu, total) -> 
+                    System.out.println(menu + ": " + total + "원"));
                 // 주문 성공 시 orderList 비우기
                 orderList.clear();
             } else {
@@ -911,9 +1002,7 @@ public class FE_KIOSK extends JFrame {
 
     
 
-    public void show_check(){
-        System.out.println("check");
-    }
+
 
     private void basic_load(JPanel leftly_main, JPanel leftly_down) {
         // HTML을 사용한 스타일링
@@ -978,6 +1067,7 @@ public class FE_KIOSK extends JFrame {
 
         checkButton.addActionListener(e -> {
             System.out.println("hi");
+            show_check();
         });
 
         leftly_down.add(homeButton);
