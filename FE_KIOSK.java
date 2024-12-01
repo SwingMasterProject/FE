@@ -196,6 +196,12 @@ public class FE_KIOSK extends JFrame {
     private void show_menu(String category) {
         // midly_main에 카테고리 정보 업데이트
         midly_main.removeAll();
+        midly_down.removeAll();
+        
+        // 스크롤 설정 초기화
+        midly.setPreferredSize(null);
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
         JLabel titleLabel = new JLabel(
             "<html>" + "<br><br>" +
             "<div style='text-align: left; margin-left: 20px;'>" +  // 왼쪽 정렬 및 여백 추가
@@ -218,7 +224,7 @@ public class FE_KIOSK extends JFrame {
         // 스크롤 동작을 위한 추가 설정
         midly.setPreferredSize(new Dimension(
             midly.getPreferredSize().width,
-            Math.max(500, (menuData.get(category).size() / 3 + 1) * 450)
+            ((menuData.get(category).size() - 1) / 3 + 1) * 300
         ));
 
         List<Menu> menuList = menuData.get(category);
@@ -272,6 +278,158 @@ public class FE_KIOSK extends JFrame {
 
         midly.revalidate();
         midly.repaint();
+    }
+
+    public void show_text() {
+        // 패널 초기화
+        midly_main.removeAll();
+        midly.removeAll();
+        midly_down.removeAll();
+        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 800));  // 패널 높이를 800으로 설정
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        
+        // Message 타이틀 추가
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel titleLabel = new JLabel("Message");
+        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        titlePanel.add(titleLabel);
+        midly_main.add(titlePanel);
+
+        // 메시지를 담을 패널
+        JPanel messageContainer = new JPanel();
+        messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
+        
+        // 스크롤 패널 설정
+        JScrollPane scrollPane = new JScrollPane(messageContainer);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(null);  // 테두리 제거
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);  // 스크롤 속도 조정
+        
+        // midly 패널 설정
+        midly.setLayout(new BorderLayout());
+        midly.add(scrollPane, BorderLayout.CENTER);
+
+        // 전송 버튼 먼저 생성
+        JButton sendButton = new JButton("Send");
+        sendButton.setPreferredSize(new Dimension(100, 40));
+
+        // 텍스트 입력 필드
+        JTextField messageField = new JTextField();
+        messageField.setPreferredSize(new Dimension(400, 40));
+        
+        // 엔터키 이벤트 추가
+        messageField.addActionListener(e -> {
+            sendButton.doClick(); // 엔터키를 누르면 send 버튼 클릭과 동일한 효과
+        });
+
+        // 전송 버튼 클릭 이벤트
+        sendButton.addActionListener(e -> {
+            String message = messageField.getText().trim();
+            if (!message.isEmpty()) {
+                JPanel messagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+                JLabel messageLabel = new JLabel(
+                    "<html><div style='background: #4F90FF; " +
+                    "color: white; " +
+                    "padding: 15px 25px; " +
+                    "border-radius: 20px; " +
+                    "margin: 10px 20px; " +
+                    "font-family: Arial; " +
+                    "font-size: 14px; " +
+                    "max-width: 400px; " +
+                    "word-wrap: break-word;'>" +
+                    message +
+                    "</div></html>"
+                );
+                messagePanel.add(messageLabel);
+                messageContainer.add(messagePanel);  // messageContainer에 추가
+                messageField.setText("");
+                
+                // 스크롤을 최하단으로 이동
+                SwingUtilities.invokeLater(() -> {
+                    JScrollBar vertical = scrollPane.getVerticalScrollBar();
+                    vertical.setValue(vertical.getMaximum());
+                });
+                
+                // UI 갱신
+                messageContainer.revalidate();
+                messageContainer.repaint();
+                SwingUtilities.invokeLater(() -> {
+                    messageField.requestFocusInWindow();
+                });
+
+                // send request 보내는 부분
+                send_message(message);
+            }
+        });
+
+        midly_down.add(messageField);
+        midly_down.add(sendButton);
+
+        // 텍스트 필드에 자동 포커스
+        SwingUtilities.invokeLater(() -> {
+            messageField.requestFocusInWindow();
+        });
+
+        // 메시지가 추가된 후 스크롤바 필요 여부 확인
+        midly.revalidate();
+        if (midly.getPreferredSize().height > 800) {
+            midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            
+            // 스크롤을 최하단으로 이동
+            SwingUtilities.invokeLater(() -> {
+                JScrollBar vertical = midly_menu.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+            });
+        }
+
+        // UI 갱신
+        midly_main.revalidate();
+        midly_main.repaint();
+        midly.revalidate();
+        midly.repaint();
+        midly_down.revalidate();
+        midly_down.repaint();
+    }
+
+    public void send_message(String message) { // 백엔드 확인 필요
+        try {
+            // JSON 객체 생성
+            JsonObject jsonRequest = new JsonObject();
+            jsonRequest.addProperty("tableNum", table_num);
+            
+            JsonArray requestsArray = new JsonArray();
+            JsonObject requestObject = new JsonObject();
+            //requestObject.addProperty("id", "64f1c8e5678abc12345d9f01");  // 고정된 ID 사용
+            requestObject.addProperty("name", message);
+            requestsArray.add(requestObject);
+            
+            jsonRequest.add("requests", requestsArray);
+
+            // API 요청 보내기
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, jsonRequest.toString());
+            
+            Request request = new Request.Builder()
+                .url("https://be-api-takaaaans-projects.vercel.app/api/request")
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
+                .build();
+                
+            Response response = client.newCall(request).execute();
+            
+            if (response.isSuccessful()) {
+                System.out.println("메시지 전송 성공");
+            } else {
+                System.out.println("메시지 전송 실패: " + response.code());
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("메시지 전송 중 오류 발생: " + e.getMessage());
+        }
     }
 
     private void show_menu_list(JPanel rightly) {
@@ -751,130 +909,7 @@ public class FE_KIOSK extends JFrame {
         timer.start();
     }
 
-    public void show_text() {
-        // 패널 초기화
-        midly_main.removeAll();
-        midly.removeAll();
-        midly_down.removeAll();
-        
-        // Message 타이틀 추가 및 왼쪽 정렬
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));  // FlowLayout.LEFT 사용
-        JLabel titleLabel = new JLabel("Message");
-        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
-        titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        titlePanel.add(titleLabel);
-        midly_main.add(titlePanel);
-
-        // 메시지 표시 영역 설정
-        midly.setLayout(new BoxLayout(midly, BoxLayout.Y_AXIS));
-        JPanel messagePanel = new JPanel();
-        messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
-        messagePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-        // 스크롤 패널에 메시지 패널 추가
-        JScrollPane scrollPane = new JScrollPane(messagePanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(null);
-        midly.add(scrollPane);
-
-        // midly_down에 입력 필드와 전송 버튼 추가
-        midly_down.setLayout(new BorderLayout(10, 0));
-        midly_down.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
-        // 텍스트 입력 필드
-        JTextField messageField = new JTextField();
-        messageField.setPreferredSize(new Dimension(400, 40));
-        messageField.setFont(new Font(messageField.getFont().getName(), Font.PLAIN, 16));
-
-        // 전송 버튼
-        JButton sendButton = new JButton("전송");
-        sendButton.setPreferredSize(new Dimension(100, 40));
-        sendButton.setBackground(new Color(255, 99, 71));
-        sendButton.setForeground(Color.WHITE);
-        sendButton.setFont(new Font(sendButton.getFont().getName(), Font.BOLD, 16));
-        sendButton.setBorderPainted(false);
-
-        // 전장된 메시지 표시 스타일 개선
-        for (String savedMessage : messageHistory) {
-            // 메시지 컨테이너 패널
-            JPanel messageContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            messageContainer.setOpaque(false);
-            
-            // 메시지 버블 패널
-            JPanel bubblePanel = new JPanel();
-            bubblePanel.setLayout(new BorderLayout());
-            bubblePanel.setBackground(new Color(255, 99, 71));  // 메시지 배경색
-            bubblePanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(5, 15, 5, 15),  // 내부 여백
-                BorderFactory.createLineBorder(new Color(255, 99, 71), 1, true)  // 둥근 테두리
-            ));
-            
-            // 메시지 텍스트
-            JLabel messageLabel = new JLabel(savedMessage);
-            messageLabel.setForeground(Color.WHITE);  // 텍스트 색상
-            messageLabel.setFont(new Font(messageLabel.getFont().getName(), Font.PLAIN, 16));
-            
-            bubblePanel.add(messageLabel);
-            messageContainer.add(bubblePanel);
-            messagePanel.add(messageContainer);
-            messagePanel.add(Box.createVerticalStrut(10));
-        }
-
-        // 전송 버튼 클릭 이벤트 수정
-        sendButton.addActionListener(e -> {
-            String message = messageField.getText().trim();
-            if (!message.isEmpty()) {
-                messageHistory.add(message);
-                
-                // 새 메시지 추가 (위와 동일한 스타일)
-                JPanel messageContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                messageContainer.setOpaque(false);
-                
-                JPanel bubblePanel = new JPanel();
-                bubblePanel.setLayout(new BorderLayout());
-                bubblePanel.setBackground(new Color(255, 99, 71));
-                bubblePanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(5, 15, 5, 15),
-                    BorderFactory.createLineBorder(new Color(255, 99, 71), 1, true)
-                ));
-                
-                JLabel messageLabel = new JLabel(message);
-                messageLabel.setForeground(Color.WHITE);
-                messageLabel.setFont(new Font(messageLabel.getFont().getName(), Font.PLAIN, 16));
-                
-                bubblePanel.add(messageLabel);
-                messageContainer.add(bubblePanel);
-                messagePanel.add(messageContainer);
-                messagePanel.add(Box.createVerticalStrut(10));
-                
-                messageField.setText("");
-                
-                // UI 갱신 및 스크롤
-                messagePanel.revalidate();
-                messagePanel.repaint();
-                
-                SwingUtilities.invokeLater(() -> {
-                    JScrollBar vertical = scrollPane.getVerticalScrollBar();
-                    vertical.setValue(vertical.getMaximum());
-                });
-            }
-        });
-
-        // Enter 키로도 메시지 전송
-        messageField.addActionListener(e -> sendButton.doClick());
-
-        // midly_down에 컴포넌트 추가
-        midly_down.add(messageField, BorderLayout.CENTER);
-        midly_down.add(sendButton, BorderLayout.EAST);
-
-        // UI 갱신
-        midly_main.revalidate();
-        midly_main.repaint();
-        midly.revalidate();
-        midly.repaint();
-        midly_down.revalidate();
-        midly_down.repaint();
-    }
+    
 
     public void show_check(){
         System.out.println("check");
