@@ -115,8 +115,8 @@ public class FE_KIOSK extends JFrame {
         midly_main.setLayout(new BoxLayout(midly_main, BoxLayout.Y_AXIS));//예비
         
         midly = new JPanel();
-        //midly.setLayout(new GridBagLayout());//예비
         midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 500));
+        //midly.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
 
         midly_menu = new JScrollPane(midly);
         midly_menu.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -196,7 +196,14 @@ public class FE_KIOSK extends JFrame {
         System.out.println("success");
         
         // 알림 메시지 설정
-        String message = (code == 0) ? "주문이 완료되었습니다" : "계산대로 이동해주세요";
+        String message;
+        if (code == 0) {
+            message = "주문이 완료되었습니다";
+        } else if (code == 1) {
+            message = "계산대로 이동해주세요";
+        } else {
+            message = "요청되었습니다";
+        }
         
         // 알림 패널 생성
         JPanel alertPanel = new JPanel();
@@ -390,6 +397,7 @@ public class FE_KIOSK extends JFrame {
         // midly 패널 설정
         midly.removeAll();
         midly.setLayout(new GridBagLayout());
+        midly.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
         
         // 스크롤 동작을 위한 추가 설정
         midly.setPreferredSize(new Dimension(
@@ -480,78 +488,57 @@ public class FE_KIOSK extends JFrame {
         midly.setLayout(new BorderLayout());
         midly.add(scrollPane, BorderLayout.CENTER);
 
-        // 전송 버튼 먼저 생성
-        JButton sendButton = new JButton("Send");
-        sendButton.setPreferredSize(new Dimension(100, 40));
-        
-        // 텍스트 입력 필드
-        JTextField messageField = new JTextField();
-        messageField.setPreferredSize(new Dimension(400, 40));
-        
-        // 엔터키 이벤트 추가
-        messageField.addActionListener(e -> {
-            sendButton.doClick(); // 엔터키를 누르면 send 버튼 클릭과 동일한 효과
-        });
-
-        // 전송 버튼 클릭 이벤트
-        sendButton.addActionListener(e -> {
-            String message = messageField.getText().trim();
-            if (!message.isEmpty()) {
-                JPanel messagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
-                JLabel messageLabel = new JLabel(
-                    "<html><div style='background: #4F90FF; " +
-                    "color: white; " +
-                    "padding: 15px 25px; " +
-                    "border-radius: 20px; " +
-                    "margin: 10px 20px; " +
-                    "font-family: Arial; " +
-                    "font-size: 14px; " +
-                    "max-width: 400px; " +
-                    "word-wrap: break-word;'>" +
-                    message +
-                    "</div></html>"
-                );
-                messagePanel.add(messageLabel);
-                messageContainer.add(messagePanel);  // messageContainer에 추가
-                messageField.setText("");
-                
-                // 스크롤을 최하단으로 이동
-                SwingUtilities.invokeLater(() -> {
-                    JScrollBar vertical = scrollPane.getVerticalScrollBar();
-                    vertical.setValue(vertical.getMaximum());
-                });
-                
-                // UI 갱신
-                messageContainer.revalidate();
-                messageContainer.repaint();
-                SwingUtilities.invokeLater(() -> {
-                    messageField.requestFocusInWindow();
-                });
-
-                // send request 보내는 부
-                send_message(message);
-            }
-        });
-
-        midly_down.add(messageField);
-        midly_down.add(sendButton);
-
-        // 텍스트 필드에 자동 포커스
-        SwingUtilities.invokeLater(() -> {
-            messageField.requestFocusInWindow();
-        });
-
-        // 메시지가 가된 후 스크롤바 필요 여부 확인
-        midly.revalidate();
-        if (midly.getPreferredSize().height > 800) {
-            midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        // requestList의 각 항목을 버튼으로 표시
+        for (Map.Entry<String, String[]> entry : requestList.entrySet()) {
+            String id = entry.getKey();
+            String name = entry.getValue()[0];
+            String status = entry.getValue()[1];
             
-            // 스크롤을 최하단으로 이동
-            SwingUtilities.invokeLater(() -> {
-                JScrollBar vertical = midly_menu.getVerticalScrollBar();
-                vertical.setValue(vertical.getMaximum());
+            // 메시지 패널 생성
+            JPanel messagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+            
+            // 버튼 배경색 설정 (active 여부에 따라)
+            String backgroundColor = status.equals("active") ? "#4F90FF" : "#808080";
+            
+            // HTML 스타일의 버튼 생성
+            JButton messageButton = new JButton(
+                "<html><div style='background: " + 
+                backgroundColor + "; " +
+                "color: white; " +
+                "padding: 15px 25px; " +
+                "border-radius: 20px; " +
+                "margin: 10px 20px; " +
+                "font-family: Arial; " +
+                "font-size: 14px; " +
+                "max-width: 400px; " +
+                "word-wrap: break-word;'>" +
+                name +
+                "</div></html>"
+            );
+            
+            // 버튼 스타일 설정
+            messageButton.setBorderPainted(false);
+            messageButton.setContentAreaFilled(false);
+            messageButton.setFocusPainted(false);
+            
+            // active 상태에 따라 버튼 활성화/비활성화 및 커서 설정
+            if (status.equals("active")) {
+                messageButton.setEnabled(true);
+                messageButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            } else {
+                messageButton.setEnabled(false);
+                messageButton.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
+            
+            // 버튼 클릭 이벤트 추가
+            messageButton.addActionListener(e -> {
+                send_request(id, name);
             });
+            
+            messagePanel.add(messageButton);
+            messageContainer.add(messagePanel);
+            messageContainer.add(Box.createVerticalStrut(5));  // 버튼 사이 간격
         }
 
         // UI 갱신
@@ -559,24 +546,28 @@ public class FE_KIOSK extends JFrame {
         midly_main.repaint();
         midly.revalidate();
         midly.repaint();
-        midly_down.revalidate();
-        midly_down.repaint();
     }
 
-    public void send_message(String message) { // 백엔드 확인 필요
+    public void send_request(String id, String name) {
         try {
             // JSON 객체 생성
             JsonObject jsonRequest = new JsonObject();
             jsonRequest.addProperty("tableNum", table_num);
             
+            // requests 배열 생성
             JsonArray requestsArray = new JsonArray();
             JsonObject requestObject = new JsonObject();
-            requestObject.addProperty("id", "6743dc620c6d6d7e7031142d");  // 고정된 ID 사용
-            requestObject.addProperty("name", message);
+            requestObject.addProperty("id", id);
+            requestObject.addProperty("name", name);
             requestsArray.add(requestObject);
             
             jsonRequest.add("requests", requestsArray);
 
+            // 보낼 JSON 데이터 출력
+            System.out.println("전송할 JSON 데이터:");
+            System.out.println(jsonRequest.toString());
+            System.out.println("전송 URL: https://be-api-takaaaans-projects.vercel.app/api/request");
+            
             // API 요청 보내기
             OkHttpClient client = new OkHttpClient().newBuilder().build();
             MediaType mediaType = MediaType.parse("application/json");
@@ -591,14 +582,15 @@ public class FE_KIOSK extends JFrame {
             Response response = client.newCall(request).execute();
             
             if (response.isSuccessful()) {
-                System.out.println("메시지 전송 성공");
+                System.out.println("요청이 성공적으로 전송되었습니다.");
+                show_success(2);
             } else {
-                System.out.println("메시지 전송 실패: " + response.code());
+                System.out.println("요청 전송 실패: " + response.code());
             }
             
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("메시지 전송 중 오류 발생: " + e.getMessage());
+            System.out.println("요청 전송 중 오류 발생: " + e.getMessage());
         }
     }
 
@@ -709,7 +701,7 @@ public class FE_KIOSK extends JFrame {
                     itemPanel.add(bottomPanel);
 
                     rightly.add(itemPanel);
-                    rightly.add(Box.createVerticalStrut(5));  // 메뉴 간 간격 5로 ���소
+                    rightly.add(Box.createVerticalStrut(5));  // 메뉴 간 간격 5로 소
 
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -740,7 +732,7 @@ public class FE_KIOSK extends JFrame {
         //totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
         totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 주문하기 버튼 먼저 생성
+        // 주문하기 튼 먼저 생성
         JButton orderButton = new JButton( // 버튼 스타일링
             "<html>" +
             "주문하기" +
@@ -770,7 +762,7 @@ public class FE_KIOSK extends JFrame {
     }
 
 
-    // 장바구니 리스트 표기
+    // 장��구니 리스트 표기
     public void addmenulist(JPanel rightly, String name, int price, String imageUrl, String id, int num){
         if (orderList.containsKey(id)){
             List<Order_list> renew_order = orderList.get(id);
@@ -995,7 +987,7 @@ public class FE_KIOSK extends JFrame {
             
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("주문 전송 중 오류 발생: " + e.getMessage());
+            System.out.println("주문 전�� 중 오류 발생: " + e.getMessage());
         }
     }
 
@@ -1285,8 +1277,8 @@ public class FE_KIOSK extends JFrame {
             "Home" +
             "</html>"
             );
-        JButton textButton = new JButton("Text");
-        JButton checkButton = new JButton("Check");
+        JButton textButton = new JButton("요청하기");
+        JButton checkButton = new JButton("계산하기");
 
         // 버튼 클릭 이벤트 추가
         homeButton.addActionListener(e -> {
@@ -1363,7 +1355,7 @@ public class FE_KIOSK extends JFrame {
         
         // 오른쪽 패널 (Qty와 Price)
         JPanel rightLabels = new JPanel();
-        rightLabels.setLayout(new GridLayout(1, 2));  // 1행 2열의 GridLayout 사용
+        rightLabels.setLayout(new GridLayout(1, 2));  // 1 2열의 GridLayout 사용
         rightLabels.setPreferredSize(new Dimension(250, rightLabels.getPreferredSize().height));  // 너비를 200에서 250으로 증가
         
         JPanel qtyPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));  // 오른쪽 정렬, 간격 20
