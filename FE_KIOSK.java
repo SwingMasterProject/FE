@@ -22,7 +22,9 @@ public class FE_KIOSK extends JFrame {
     private int table_num = 2;
     private Map<String, List<Menu>> menuData = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList = new LinkedHashMap<>();
+    private Map<String, List<Order_list>> orderList_final = new LinkedHashMap<>();
     private Map<String, Integer[]> check = new LinkedHashMap<>();
+    private Map<String, String[]> requestList = new LinkedHashMap<>();
     private Container c;
     private Container left_c;
     private Container mid_c;
@@ -30,7 +32,6 @@ public class FE_KIOSK extends JFrame {
     private JPanel leftly_main;
     private JPanel leftly;
     private JPanel leftly_down;
-    private JPanel left_L;
     private JPanel midly_main;
     private JPanel midly;
     private JPanel midly_down;
@@ -40,7 +41,6 @@ public class FE_KIOSK extends JFrame {
     private JPanel rightly_down;
     String store_name = "카페 명"; // 나중에 입력받는 형태 로 지정가능
     private int total_price = 0;
-    private List<String> messageHistory = new ArrayList<>();  // 메시지 기록 저장용
 
     // 카테고리 메뉴별 데이터(카테고리정보, 메뉴정보 포함)
     //private Timer timer; //
@@ -105,8 +105,6 @@ public class FE_KIOSK extends JFrame {
 
         leftly_down = new JPanel();
         leftly_down.setLayout(new FlowLayout(FlowLayout.RIGHT));
-
-        //left_L = new JPanel(new GridBagLayout());
 
 
 
@@ -194,85 +192,175 @@ public class FE_KIOSK extends JFrame {
         setVisible(true);
     }
 
-    public void show_check(){
+    public void show_success(int code) {
+        System.out.println("success");
+        
+        // 알림 메시지 설정
+        String message = (code == 0) ? "주문이 완료되었습니다" : "계산대로 이동해주세요";
+        
+        // 알림 패널 생성
+        JPanel alertPanel = new JPanel();
+        alertPanel.setBackground(new Color(0, 0, 0, 150));  // 반투명 검은색 배경
+        alertPanel.setLayout(new GridBagLayout());  // 중앙 정렬을 위한 GridBagLayout
+        
+        // 메시지 라벨 생성
+        JLabel alertLabel = new JLabel(message);
+        alertLabel.setFont(new Font(alertLabel.getFont().getName(), Font.BOLD, 24));
+        alertLabel.setForeground(Color.WHITE);
+        alertLabel.setHorizontalAlignment(JLabel.CENTER);
+        
+        // 알림 패널에 메시지 추가
+        alertPanel.add(alertLabel);
+        
+        // 알림 패널을 화면 중앙에 추가
+        alertPanel.setBounds(0, 0, getWidth(), getHeight());
+        getLayeredPane().add(alertPanel, JLayeredPane.POPUP_LAYER);
+        
+        // 1초 후 알림 제거
+        Timer timer = new Timer(1000, e -> {
+            getLayeredPane().remove(alertPanel);
+            getLayeredPane().revalidate();
+            getLayeredPane().repaint();
+        });
+        timer.setRepeats(false);  // 타이머가 한 번만 실행되도록 설정
+        timer.start();
+    }
+
+    public void show_check() {
         System.out.println("check");
         midly_main.removeAll();
-    midly.removeAll();
-    midly_down.removeAll();
-    midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 800));
-    midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-    
-    // Message 타이틀 추가
-    JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    JLabel titleLabel = new JLabel("Check");
-    titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
-    titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-    titlePanel.add(titleLabel);
-    midly_main.add(titlePanel);
+        midly.removeAll();
+        midly_down.removeAll();
+        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 700));
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
-    // 메시지를 담을 패널
-    JPanel messageContainer = new JPanel();
-    messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
-    
-    // 스크롤 패널 설정
-    JScrollPane scrollPane = new JScrollPane(messageContainer);
-    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-    scrollPane.setBorder(null);
-    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-    
-    // midly 패널 설정
-    midly.setLayout(new BorderLayout());
-    midly.add(scrollPane, BorderLayout.CENTER);
+        // Message 타이틀 추가
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel titleLabel = new JLabel("Check");
+        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        titlePanel.add(titleLabel);
+        midly_main.add(titlePanel);
 
-    // check 데이터 표시
-    int totalSum = 0;
-    for (Map.Entry<String, Integer[]> entry : check.entrySet()) {
-        JPanel messagePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        messagePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
-        JLabel messageLabel = new JLabel(
-        "<html><div style='background: #4F90FF; " +
-        "color: white; " +
-        "padding: 15px 25px; " +
-        "border-radius: 20px; " +
-        "margin: 10px 20px; " +
-        "font-family: Arial; " +
-        "font-size: 14px; " +
-        "max-width: 400px; " +
-        "word-wrap: break-word;'>" +
-        String.format("%s - %d개 - %,d원", 
-            entry.getKey(), 
-            entry.getValue()[0], 
-            entry.getValue()[1]) +
-        "</div></html>"
-    );
-        messagePanel.add(messageLabel);
-        messageContainer.add(messagePanel);
-        totalSum += entry.getValue()[1];
-    }
+        // 메시 담을 패널
+        JPanel messageContainer = new JPanel();
+        messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
+        
+        // 스크롤 패널 설정
+        JScrollPane scrollPane = new JScrollPane(messageContainer);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        // midly 패널 설정
+        midly.setLayout(new BorderLayout());
+        midly.add(scrollPane, BorderLayout.CENTER);
+        
+        // orderList_final의 각 항목을 표시
+        for (List<Order_list> orderListItems : orderList_final.values()) {
+            for (Order_list order : orderListItems) {
+                try {
+                    URL url = new URL(order.geturl());
+                    
+                    // 각 주문 항목을 위한 패널
+                    JPanel itemPanel = new JPanel(new BorderLayout());
+                    itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+                    itemPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-    midly.revalidate();
-    if (midly.getPreferredSize().height > 800) {
-    midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-    
-        // 스크롤을 최하단으로 이동
-        SwingUtilities.invokeLater(() -> {
-            JScrollBar vertical = midly_menu.getVerticalScrollBar();
-            vertical.setValue(vertical.getMaximum());
+                    // 왼쪽 패널 (이미지)
+                    JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+                    JLabel imageLabel = new JLabel(new ImageIcon(new ImageIcon(url)
+                        .getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH)));
+                    leftPanel.add(imageLabel);
+
+                    // 중앙 패널 (메뉴 이름과 수량)
+                    JPanel centerPanel = new JPanel();
+                    centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+                    
+                    JLabel nameLabel = new JLabel(order.getname());
+                    nameLabel.setFont(new Font(nameLabel.getFont().getName(), Font.BOLD, 16));
+                    nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    
+                    JLabel quantityLabel = new JLabel(String.format("%d개", order.getnum()));
+                    quantityLabel.setFont(new Font(quantityLabel.getFont().getName(), Font.PLAIN, 14));
+                    quantityLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    
+                    centerPanel.add(nameLabel);
+                    centerPanel.add(Box.createVerticalStrut(5));
+                    centerPanel.add(quantityLabel);
+                    centerPanel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 0));
+
+                    // 오른쪽 패널 (총 가격)
+                    JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+                    JLabel priceLabel = new JLabel(String.format("%,d원", order.getprice() * order.getnum()));
+                    priceLabel.setFont(new Font(priceLabel.getFont().getName(), Font.PLAIN, 14));
+                    rightPanel.add(priceLabel);
+
+                    // 패널에 컴포넌트 추가
+                    itemPanel.add(leftPanel, BorderLayout.WEST);
+                    itemPanel.add(centerPanel, BorderLayout.CENTER);
+                    itemPanel.add(rightPanel, BorderLayout.EAST);
+
+                    messageContainer.add(itemPanel);
+                    messageContainer.add(Box.createVerticalStrut(10));
+
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // 총 가격 계산
+        int totalPrice = 0;
+        for (List<Order_list> orderListItems : orderList_final.values()) {
+            for (Order_list order : orderListItems) {
+                totalPrice += order.getprice() * order.getnum();
+            }
+        }
+
+        // 계산하기 버튼과 총 가격을 담을 패널
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        // 계산하기 버튼 (가로 300px, 세로 50px로 크기 조정)
+        JButton calculateButton = new JButton("계산하기");
+        calculateButton.setPreferredSize(new Dimension(300, 50));
+        calculateButton.setMaximumSize(new Dimension(300, 50));
+        calculateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // 버튼 클릭 이벤트
+        calculateButton.addActionListener(e -> {
+            send_order_final();
+            orderList_final.clear();
+            show_check();
         });
-    }
 
-    // 총액 표시
-    JLabel totalLabel = new JLabel(String.format("Total Price = %,d원", totalSum));
-    totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 16));
-    midly_down.add(totalLabel);
+        // 총 가격 라벨
+        JLabel totalLabel = new JLabel(String.format("Total Price = %,d원", totalPrice));
+        totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 16));
+        totalLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
 
-    // UI 갱신
-    midly_main.revalidate();
-    midly_main.repaint();
-    midly.revalidate();
-    midly.repaint();
-    midly_down.revalidate();
-    midly_down.repaint();
+        // 패널에 버튼과 라벨 추가
+        bottomPanel.add(Box.createHorizontalStrut(20));
+        bottomPanel.add(totalLabel);
+        bottomPanel.add(Box.createHorizontalGlue());
+        bottomPanel.add(calculateButton);
+        bottomPanel.add(Box.createHorizontalStrut(20));
+
+        // midly_down에 패널 추가
+        midly_down.setLayout(new BoxLayout(midly_down, BoxLayout.Y_AXIS));
+        midly_down.add(Box.createVerticalStrut(5));
+        midly_down.add(bottomPanel);
+        midly_down.add(Box.createVerticalStrut(5));
+
+        // UI 갱신
+        midly_main.revalidate();
+        midly_main.repaint();
+        midly.revalidate();
+        midly.repaint();
+        midly_down.revalidate();
+        midly_down.repaint();
     }
 
     private void show_menu(String category) {
@@ -395,7 +483,7 @@ public class FE_KIOSK extends JFrame {
         // 전송 버튼 먼저 생성
         JButton sendButton = new JButton("Send");
         sendButton.setPreferredSize(new Dimension(100, 40));
-
+        
         // 텍스트 입력 필드
         JTextField messageField = new JTextField();
         messageField.setPreferredSize(new Dimension(400, 40));
@@ -441,7 +529,7 @@ public class FE_KIOSK extends JFrame {
                     messageField.requestFocusInWindow();
                 });
 
-                // send request 보내는 부분
+                // send request 보내는 부
                 send_message(message);
             }
         });
@@ -454,7 +542,7 @@ public class FE_KIOSK extends JFrame {
             messageField.requestFocusInWindow();
         });
 
-        // 메시지가 추가된 후 스크롤바 필요 여부 확인
+        // 메시지가 가된 후 스크롤바 필요 여부 확인
         midly.revalidate();
         if (midly.getPreferredSize().height > 800) {
             midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -483,7 +571,7 @@ public class FE_KIOSK extends JFrame {
             
             JsonArray requestsArray = new JsonArray();
             JsonObject requestObject = new JsonObject();
-            //requestObject.addProperty("id", "64f1c8e5678abc12345d9f01");  // 고정된 ID 사용
+            requestObject.addProperty("id", "6743dc620c6d6d7e7031142d");  // 고정된 ID 사용
             requestObject.addProperty("name", message);
             requestsArray.add(requestObject);
             
@@ -621,7 +709,7 @@ public class FE_KIOSK extends JFrame {
                     itemPanel.add(bottomPanel);
 
                     rightly.add(itemPanel);
-                    rightly.add(Box.createVerticalStrut(5));  // 메뉴 간 간격 5로 감소
+                    rightly.add(Box.createVerticalStrut(5));  // 메뉴 간 간격 5로 ���소
 
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -652,15 +740,18 @@ public class FE_KIOSK extends JFrame {
         //totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
         totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 결제하기 버튼
-        JButton orderButton = new JButton("결제하기");
-        orderButton.setPreferredSize(new Dimension(150, 50));
-        orderButton.setMaximumSize(new Dimension(150, 50));
+        // 주문하기 버튼 먼저 생성
+        JButton orderButton = new JButton( // 버튼 스타일링
+            "<html>" +
+            "주문하기" +
+            "</html>");
+        orderButton.setPreferredSize(new Dimension(400, 50));
+        orderButton.setMaximumSize(new Dimension(400, 50));
         orderButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 결제하기 버튼 클릭 이벤트
+        // 주문하기 버튼 클릭 이벤트
         orderButton.addActionListener(e -> {
-            System.out.println("결제하기 버튼 클릭됨");
+            System.out.println("주문하기 버튼 클릭됨");
             //System.out.println("총 결제 금액: " + totalPrice + "원");
             send_order();  // API 요청 전송
             
@@ -706,87 +797,206 @@ public class FE_KIOSK extends JFrame {
 
     public void conn_be() {
         OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
+        
+        // 기존 메뉴 데이터 요청
+        Request menuRequest = new Request.Builder()
                 .url("https://be-api-takaaaans-projects.vercel.app/api/menu?available=true")
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            String responseBody = response.body().string();
-            JsonObject jsonResponse = new JsonParser().parse(responseBody).getAsJsonObject();
-            JsonArray menuItemsArray = jsonResponse.getAsJsonArray("menuItems");
+        // 새로운 요청 목록 데이터 요청
+        Request requestListRequest = new Request.Builder()
+                .url("https://be-api-takaaaans-projects.vercel.app/api/request/list")
+                .build();
 
-            
-            Map<String, List<Menu>> newMenuData = new LinkedHashMap<>();
-            // 새 데이터 처리
-            for (JsonElement element : menuItemsArray) {
-                JsonObject menuItemObj = element.getAsJsonObject();
-                String id = menuItemObj.get("_id").getAsString();
-                String name = menuItemObj.get("name").getAsString();
-                int price = menuItemObj.get("price").getAsInt();
-                String imageUrl = menuItemObj.get("imageUrl").getAsString();
-                boolean available = menuItemObj.get("available").getAsBoolean();
-                String category = menuItemObj.get("category").getAsString();
+        try {
+            // 메뉴 데이터 처리
+            try (Response menuResponse = client.newCall(menuRequest).execute()) {
+                String menuResponseBody = menuResponse.body().string();
+                JsonObject jsonResponse = new JsonParser().parse(menuResponseBody).getAsJsonObject();
+                JsonArray menuItemsArray = jsonResponse.getAsJsonArray("menuItems");
 
-                // Menu 객체 생성
-                Menu menu = new Menu(id, name, price, imageUrl, available, category);
+                Map<String, List<Menu>> newMenuData = new LinkedHashMap<>();
+                // 기존 메뉴 데이터 처리 로직...
+                for (JsonElement element : menuItemsArray) {
+                    // 기존 코드 유지
+                    JsonObject menuItemObj = element.getAsJsonObject();
+                    String id = menuItemObj.get("_id").getAsString();
+                    String name = menuItemObj.get("name").getAsString();
+                    int price = menuItemObj.get("price").getAsInt();
+                    String imageUrl = menuItemObj.get("imageUrl").getAsString();
+                    boolean available = menuItemObj.get("available").getAsBoolean();
+                    String category = menuItemObj.get("category").getAsString();
 
-                // 카고리별 메뉴 리스트에 추가
-                newMenuData.putIfAbsent(category, new ArrayList<>());
-                newMenuData.get(category).add(menu);
-            }
-
-            // 여기에 
-            boolean isSameData = true;
-            for (String category : newMenuData.keySet()) {
-                List<Menu> newMenuList = newMenuData.get(category);
-                List<Menu> oldMenuList = menuData.get(category);
-                
-                if (oldMenuList == null || oldMenuList.size() != newMenuList.size()) {
-                    isSameData = false;
-                    break;
+                    Menu menu = new Menu(id, name, price, imageUrl, available, category);
+                    newMenuData.putIfAbsent(category, new ArrayList<>());
+                    newMenuData.get(category).add(menu);
                 }
-                
-                for (int i = 0; i < newMenuList.size(); i++) {
-                    Menu newMenu = newMenuList.get(i);
-                    Menu oldMenu = oldMenuList.get(i);
+
+                // 데이터 비교 로직
+                boolean isSameData = true;
+                // 기존 비교 로직 유지...
+                for (String category : newMenuData.keySet()) {
+                    List<Menu> newMenuList = newMenuData.get(category);
+                    List<Menu> oldMenuList = menuData.get(category);
                     
-                    if (!newMenu.id.equals(oldMenu.id) || 
-                        !newMenu.name.equals(oldMenu.name) || 
-                        newMenu.price != oldMenu.price || 
-                        !newMenu.imageUrl.equals(oldMenu.imageUrl) || 
-                        newMenu.available != oldMenu.available || 
-                        !newMenu.category.equals(oldMenu.category)) {
+                    if (oldMenuList == null || oldMenuList.size() != newMenuList.size()) {
                         isSameData = false;
                         break;
                     }
-                }
-            }
-            if (isSameData) {
-                System.out.println("메뉴 데이터가 최신 상태입니다.");
-                return;
-            }
-
-            menuData.clear();
-            menuData.putAll(newMenuData);
-            
-
-            // 데이터 로딩이 완료된 후 EDT에서 UI 업데이트
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    // 카테고리 버튼 추가
-                    addcategorybt(leftly);
                     
-                    //  번째 카테고의 메뉴 표시
-                    if (!menuData.isEmpty()) {
-                        String firstCategory = menuData.keySet().iterator().next();
-                        show_menu(firstCategory);  // 여기서 자동으 midly_main도 업데트됨
+                    for (int i = 0; i < newMenuList.size(); i++) {
+                        Menu newMenu = newMenuList.get(i);
+                        Menu oldMenu = oldMenuList.get(i);
+                        
+                        if (!newMenu.id.equals(oldMenu.id) || 
+                            !newMenu.name.equals(oldMenu.name) || 
+                            newMenu.price != oldMenu.price || 
+                            !newMenu.imageUrl.equals(oldMenu.imageUrl) || 
+                            newMenu.available != oldMenu.available || 
+                            !newMenu.category.equals(oldMenu.category)) {
+                            isSameData = false;
+                            break;
+                        }
                     }
                 }
-            });
+
+                if (!isSameData) {
+                    menuData.clear();
+                    menuData.putAll(newMenuData);
+
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            addcategorybt(leftly);
+                            if (!menuData.isEmpty()) {
+                                String firstCategory = menuData.keySet().iterator().next();
+                                show_menu(firstCategory);
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 요청 목록 데이터 처리
+            try (Response requestListResponse = client.newCall(requestListRequest).execute()) {
+                String requestListResponseBody = requestListResponse.body().string();
+                JsonObject requestListJson = new JsonParser().parse(requestListResponseBody).getAsJsonObject();
+                
+                // 응답이 성공적인지 확인
+                if (requestListJson.get("success").getAsBoolean()) {
+                    JsonArray requestsArray = requestListJson.getAsJsonArray("data");
+                    
+                    // requestList 맵 초기화
+                    requestList.clear();
+                    
+                    // 새로운 데이터 저장
+                    for (JsonElement element : requestsArray) {
+                        JsonObject request = element.getAsJsonObject();
+                        String id = request.get("_id").getAsString();
+                        String name = request.get("name").getAsString();
+                        boolean isActive = request.get("isActive").getAsBoolean();
+                        
+                        // requestList에 데이터 저장
+                        // [0]: 이름, [1]: 활성상태("active" 또는 "inactive")
+                        requestList.put(id, new String[]{
+                            name,
+                            isActive ? "active" : "inactive"
+                        });
+                    }
+
+                    // requestList 내용 출력
+                    System.out.println("\n=== 저장된 요청 목록 ===");
+                    for (Map.Entry<String, String[]> entry : requestList.entrySet()) {
+                        System.out.printf("ID: %s\n요청내용: %s\n상태: %s\n---\n", 
+                            entry.getKey(), 
+                            entry.getValue()[0], 
+                            entry.getValue()[1]);
+                    }
+                    System.out.println("====================\n");
+                }
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }     
+    }
+
+    public void send_order_final() {
+        try {
+            // orderList가 비어있는지 확인
+            if (orderList_final.isEmpty()) {
+                System.out.println("주문 목록이 비어있습니다.");
+                return;  // 메소드 종료
+            }
+
+            // JSON 객체 생성
+            JsonObject jsonOrder = new JsonObject();
+            JsonArray orderItems = new JsonArray();
+            
+            // 총 가격 계산
+            int totalPrice = 0;
+            
+            // orderList_fianl의 각 아이템을 JSON 형식으로 변환
+            for (List<Order_list> orderListItems : orderList_final.values()) {
+                for (Order_list order : orderListItems) {
+                    JsonObject item = new JsonObject();
+                    item.addProperty("menuId", order.getid());
+                    item.addProperty("name", order.getname());
+                    item.addProperty("quantity", order.getnum());
+                    item.addProperty("price", order.getprice()*order.getnum());
+                    
+                    // 개별 주문의 총 가격 계산
+                    totalPrice += order.getprice() * order.getnum();
+
+                    Integer[] values = check.containsKey(order.getname()) ? 
+                        check.get(order.getname()) : new Integer[]{0, 0};
+                    values[0] += order.getnum();
+                    values[1] += order.getprice() * order.getnum();
+                    
+                    orderItems.add(item);
+                }
+            }
+            
+            // JSON 객체에 데이터 추가
+            jsonOrder.add("orderItems", orderItems);
+            jsonOrder.addProperty("totalPrice", totalPrice);
+            
+            // 보낼 JSON 데이터 출력
+            System.out.println("전송할 JSON 데이터:");
+            System.out.println(jsonOrder.toString());
+            System.out.println("전송 URL: https://be-api-takaaaans-projects.vercel.app/api/table/new_order?tableNum=" + table_num);
+            
+            // API 요청 부분 주석 처리
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, jsonOrder.toString());
+            
+            Request request = new Request.Builder()
+                .url("https://be-api-takaaaans-projects.vercel.app/api/table/new_order?tableNum=" + table_num)
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
+                .build();
+                
+            Response response = client.newCall(request).execute();
+            
+            if (response.isSuccessful()) {
+                System.out.println("주문이 성공적으로 전송되었니다.");
+                // 주문 성공 시 check 채우기 확인
+                /*
+                check.forEach((menu, total) -> 
+                    System.out.println(menu + ": " + total + "원"));
+                    */
+                // 주문 성공 시 orderList 비우기
+                orderList_final.clear();
+                show_success(1);
+            } else {
+                System.out.println("주문 전송 실패: " + response.code());
+            }
+            
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("주문 전송 중 오류 발생: " + e.getMessage());
+        }
     }
 
     public void send_order() {
@@ -820,7 +1030,42 @@ public class FE_KIOSK extends JFrame {
                         check.get(order.getname()) : new Integer[]{0, 0};
                     values[0] += order.getnum();
                     values[1] += order.getprice() * order.getnum();
-                    check.put(order.getname(), values);
+                    
+                    // orderList_final에 항목 추가 또는 업데이트
+                    if (orderList_final.containsKey(order.getid())) {
+                        List<Order_list> existingOrders = orderList_final.get(order.getid());
+                        boolean found = false;
+                        for (Order_list existingOrder : existingOrders) {
+                            if (existingOrder.getid().equals(order.getid())) {
+                                // 기존 주문이 있으면 수량과 가격 업데이트
+                                existingOrder.set_num(existingOrder.getnum() + order.getnum());
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            // 같은 id지만 다른 주문이면 새로 추가
+                            Order_list list = new Order_list(
+                                order.getname(), 
+                                order.getprice(), 
+                                order.geturl(), 
+                                order.getid(), 
+                                order.getnum()
+                            );
+                            existingOrders.add(list);
+                        }
+                    } else {
+                        // 새로운 메뉴면 새 리스트 생성
+                        Order_list list = new Order_list(
+                            order.getname(), 
+                            order.getprice(), 
+                            order.geturl(), 
+                            order.getid(), 
+                            order.getnum()
+                        );
+                        orderList_final.putIfAbsent(order.getid(), new ArrayList<>());
+                        orderList_final.get(order.getid()).add(list);
+                    }
                     
                     orderItems.add(item);
                 }
@@ -851,10 +1096,13 @@ public class FE_KIOSK extends JFrame {
             if (response.isSuccessful()) {
                 System.out.println("주문이 성공적으로 전송되었니다.");
                 // 주문 성공 시 check 채우기 확인
+                /*
                 check.forEach((menu, total) -> 
                     System.out.println(menu + ": " + total + "원"));
+                    */
                 // 주문 성공 시 orderList 비우기
                 orderList.clear();
+                show_success(0);
             } else {
                 System.out.println("주문 전송 실패: " + response.code());
             }
@@ -1030,9 +1278,13 @@ public class FE_KIOSK extends JFrame {
         leftly_main.repaint();
 
         // leftly_down 패널에 버튼 추가
-        leftly_down.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        leftly_down.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-        JButton homeButton = new JButton("Home");
+        JButton homeButton = new JButton( // 여기 버튼들 html 스타일로 조정
+            "<html>" + 
+            "Home" +
+            "</html>"
+            );
         JButton textButton = new JButton("Text");
         JButton checkButton = new JButton("Check");
 
@@ -1153,3 +1405,4 @@ public class FE_KIOSK extends JFrame {
         //kiosk.conn_be();  
     }   
 }
+
