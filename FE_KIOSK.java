@@ -238,9 +238,7 @@ public class FE_KIOSK extends JFrame {
         midly_main.removeAll();
         midly.removeAll();
         midly_down.removeAll();
-        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 700));
-        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-
+        
         // Message 타이틀 추가
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel titleLabel = new JLabel("Check");
@@ -249,19 +247,9 @@ public class FE_KIOSK extends JFrame {
         titlePanel.add(titleLabel);
         midly_main.add(titlePanel);
 
-        // 메시 담을 패널
+        // 메시지 담을 패널
         JPanel messageContainer = new JPanel();
         messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
-        
-        // 스크롤 패널 설정
-        JScrollPane scrollPane = new JScrollPane(messageContainer);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        
-        // midly 패널 설정
-        midly.setLayout(new BorderLayout());
-        midly.add(scrollPane, BorderLayout.CENTER);
         
         // orderList_final의 각 항목을 표시
         for (List<Order_list> orderListItems : orderList_final.values()) {
@@ -316,6 +304,14 @@ public class FE_KIOSK extends JFrame {
                 }
             }
         }
+
+        // midly에 messageContainer 직접 추가
+        midly.setLayout(new BorderLayout());
+        midly.add(messageContainer, BorderLayout.CENTER);
+        
+        // 스크롤팬 설정
+        //midly_menu.setViewportView(midly);
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         // 총 가격 계산
         int totalPrice = 0;
@@ -372,12 +368,20 @@ public class FE_KIOSK extends JFrame {
 
     private void show_menu(String category) {
         // midly_main에 카테고리 정보 업데이트
-        midly_main.removeAll();
-        midly_down.removeAll();
+        
         
         // 스크롤 설정 초기화
-        midly.setPreferredSize(null);
-        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        midly_main.removeAll();
+        midly_down.removeAll();
+        midly.removeAll();
+        midly_down.setLayout(null);
+        
+        // 2. viewport 초기화 및 기본 설정
+        midly_menu.setViewportView(null);
+        midly.setLayout(new GridBagLayout());
+
+        //midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 700));
+        //midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         
         JLabel titleLabel = new JLabel(
             "<html>" + "<br><br>" +
@@ -396,15 +400,30 @@ public class FE_KIOSK extends JFrame {
 
         // midly 패널 설정
         midly.removeAll();
+        //midly_menu.removeAll();
         midly.setLayout(new GridBagLayout());
-        midly.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
-        
+        midly_menu.setViewportView(midly);
+        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 600));
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        //midly.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
+        //midly.setMinimumSize(new Dimension(midly.getPreferredSize().width, 700));
+        midly_menu.setMinimumSize(null);
+        midly_menu.setMaximumSize(null);
+        midly_menu.setPreferredSize(new Dimension(midly.getPreferredSize().width, 600));
+
+
         // 스크롤 동작을 위한 추가 설정
         midly.setPreferredSize(new Dimension(
             midly.getPreferredSize().width,
             ((menuData.get(category).size() - 1) / 3 + 1) * 300
         ));
 
+        
+
+        midly_menu.setViewportView(midly);
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
+        
         List<Menu> menuList = menuData.get(category);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(30, 30, 30, 30);
@@ -453,9 +472,11 @@ public class FE_KIOSK extends JFrame {
                 e.printStackTrace();
             }
         }
-
+        
         midly.revalidate();
         midly.repaint();
+        midly_menu.revalidate();
+        midly_menu.repaint();
     }
 
     public void show_text() {
@@ -463,8 +484,7 @@ public class FE_KIOSK extends JFrame {
         midly_main.removeAll();
         midly.removeAll();
         midly_down.removeAll();
-        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, 800));  // 패널 높이를 800으로 설정
-        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        midly_down.setLayout(null);
         
         // Message 타이틀 추가
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -473,21 +493,11 @@ public class FE_KIOSK extends JFrame {
         titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         titlePanel.add(titleLabel);
         midly_main.add(titlePanel);
-
+    
         // 메시지를 담을 패널
         JPanel messageContainer = new JPanel();
         messageContainer.setLayout(new BoxLayout(messageContainer, BoxLayout.Y_AXIS));
         
-        // 스크롤 패널 설정
-        JScrollPane scrollPane = new JScrollPane(messageContainer);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(null);  // 테두리 제거
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);  // 스크롤 속도 조정
-        
-        // midly 패널 설정
-        midly.setLayout(new BorderLayout());
-        midly.add(scrollPane, BorderLayout.CENTER);
-
         // requestList의 각 항목을 버튼으로 표시
         for (Map.Entry<String, String[]> entry : requestList.entrySet()) {
             String id = entry.getKey();
@@ -540,12 +550,22 @@ public class FE_KIOSK extends JFrame {
             messageContainer.add(messagePanel);
             messageContainer.add(Box.createVerticalStrut(5));  // 버튼 사이 간격
         }
-
+    
+        // midly 설정
+        midly.setLayout(new BorderLayout());
+        midly.add(messageContainer, BorderLayout.CENTER);
+        
+        // midly_menu 스크롤 설정
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        midly_menu.getVerticalScrollBar().setUnitIncrement(16);
+    
         // UI 갱신
         midly_main.revalidate();
         midly_main.repaint();
         midly.revalidate();
         midly.repaint();
+        midly_down.revalidate();
+        midly_down.repaint();
     }
 
     public void send_request(String id, String name) {
@@ -686,7 +706,7 @@ public class FE_KIOSK extends JFrame {
                     // 삭제 버튼 패널 (오른쪽)
                     JPanel deletePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
                     JButton deleteButton = new JButton("삭제");
-                    deleteButton.setPreferredSize(buttonSize);
+                    deleteButton.setPreferredSize(new Dimension(60, 50));
                     deleteButton.addActionListener(e -> {
                         orderList.remove(order.getid());
                         show_menu_list(rightly);
@@ -762,7 +782,7 @@ public class FE_KIOSK extends JFrame {
     }
 
 
-    // 장��구니 리스트 표기
+    // 장구니 리스트 표기
     public void addmenulist(JPanel rightly, String name, int price, String imageUrl, String id, int num){
         if (orderList.containsKey(id)){
             List<Order_list> renew_order = orderList.get(id);
@@ -898,7 +918,7 @@ public class FE_KIOSK extends JFrame {
                     // requestList 내용 출력
                     System.out.println("\n=== 저장된 요청 목록 ===");
                     for (Map.Entry<String, String[]> entry : requestList.entrySet()) {
-                        System.out.printf("ID: %s\n요청내용: %s\n상태: %s\n---\n", 
+                        System.out.printf("ID: %s\n요��내용: %s\n상태: %s\n---\n", 
                             entry.getKey(), 
                             entry.getValue()[0], 
                             entry.getValue()[1]);
@@ -987,7 +1007,7 @@ public class FE_KIOSK extends JFrame {
             
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("주문 전�� 중 오류 발생: " + e.getMessage());
+            System.out.println("주문 전송 중 오류 발생: " + e.getMessage());
         }
     }
 
