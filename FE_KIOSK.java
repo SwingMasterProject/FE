@@ -19,7 +19,7 @@ import javax.swing.Timer;
 
 public class FE_KIOSK extends JFrame {
     //전역 변수 사용
-    private int table_num = 2;
+    private int table_num = 0;
     private Map<String, List<Menu>> menuData = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList_final = new LinkedHashMap<>();
@@ -336,7 +336,6 @@ public class FE_KIOSK extends JFrame {
         calculateButton.addActionListener(e -> {
             send_order_final();
             orderList_final.clear();
-            show_check();
         });
 
         // 총 가격 라벨
@@ -918,7 +917,7 @@ public class FE_KIOSK extends JFrame {
                     // requestList 내용 출력
                     System.out.println("\n=== 저장된 요청 목록 ===");
                     for (Map.Entry<String, String[]> entry : requestList.entrySet()) {
-                        System.out.printf("ID: %s\n요��내용: %s\n상태: %s\n---\n", 
+                        System.out.printf("ID: %s\n요청내용: %s\n상태: %s\n---\n", 
                             entry.getKey(), 
                             entry.getValue()[0], 
                             entry.getValue()[1]);
@@ -992,14 +991,11 @@ public class FE_KIOSK extends JFrame {
             
             if (response.isSuccessful()) {
                 System.out.println("주문이 성공적으로 전송되었니다.");
-                // 주문 성공 시 check 채우기 확인
-                /*
-                check.forEach((menu, total) -> 
-                    System.out.println(menu + ": " + total + "원"));
-                    */
-                // 주문 성공 시 orderList 비우기
                 orderList_final.clear();
                 show_success(1);
+                String firstCategory = menuData.keySet().iterator().next();
+                show_menu(firstCategory);
+                
             } else {
                 System.out.println("주문 전송 실패: " + response.code());
             }
@@ -1260,9 +1256,64 @@ public class FE_KIOSK extends JFrame {
         timer.start();
     }
 
-    
+    public void fix_table(){
+        System.out.println("hi");
+        // 입력 다이얼로그 생성
+        JDialog dialog = new JDialog(this, "테이블 번호 변경", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(300, 150);
+        dialog.setLocationRelativeTo(this);
 
+        // 입력 패널 생성
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JLabel label = new JLabel("새로운 테이블 번호: ");
+        JTextField textField = new JTextField(5);
+        inputPanel.add(label);
+        inputPanel.add(textField);
 
+        // 버튼 패널 생성
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton confirmButton = new JButton("확인");
+        JButton cancelButton = new JButton("취소");
+
+        // 확인 버튼 이벤트
+        confirmButton.addActionListener(e -> {
+            try {
+                int newTableNum = Integer.parseInt(textField.getText().trim());
+                if (newTableNum > 0) {
+                    table_num = newTableNum;
+                    dialog.dispose();
+                    // 테이블 번호가 변경되었으므로 UI 업데이트
+                    basic_load(leftly_main, leftly_down);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "1 이상의 숫자를 입력해주세요.", 
+                        "입력 오류", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, 
+                    "올바른 숫자를 입력해주세요.", 
+                    "입력 오류", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // 취소 버튼 이벤트
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(confirmButton);
+        buttonPanel.add(cancelButton);
+
+        // 다이얼로그에 컴포넌트 추가
+        dialog.add(inputPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Enter 키로 확인 버튼 클릭
+        textField.addActionListener(e -> confirmButton.doClick());
+
+        dialog.setVisible(true);
+    }
 
     private void basic_load(JPanel leftly_main, JPanel leftly_down) {
         // HTML을 사용한 스타일링
@@ -1290,6 +1341,7 @@ public class FE_KIOSK extends JFrame {
         leftly_main.repaint();
 
         // leftly_down 패널에 버튼 추가
+        leftly_down.removeAll();
         leftly_down.setLayout(new FlowLayout(FlowLayout.CENTER));
 
         JButton homeButton = new JButton( // 여기 버튼들 html 스타일로 조정
@@ -1355,6 +1407,13 @@ public class FE_KIOSK extends JFrame {
         JLabel tableLabel = new JLabel("Table " + table_num);
         tableLabel.setFont(new Font(tableLabel.getFont().getName(), Font.BOLD, 24));
         tablePanel.add(tableLabel);
+
+        // 테이블 번호 버튼
+        JButton tableButton = new JButton("FIX");
+        tableButton.addActionListener(e -> {
+            fix_table();
+        });
+        tablePanel.add(tableButton);
 
         // Dine In 버튼 패널 (그 다음 추가)
         JPanel dineInPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
