@@ -19,7 +19,7 @@ import javax.swing.Timer;
 
 public class FE_KIOSK extends JFrame {
     //전역 변수 사용
-    private int table_num = 0;
+    private int table_num = 1;
     private Map<String, List<Menu>> menuData = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList = new LinkedHashMap<>();
     private Map<String, List<Order_list>> orderList_final = new LinkedHashMap<>();
@@ -305,14 +305,33 @@ public class FE_KIOSK extends JFrame {
             }
         }
 
-        // midly에 messageContainer 직접 추가
+        // midly 패널 설정 수정
         midly.setLayout(new BorderLayout());
-        midly.add(messageContainer, BorderLayout.CENTER);
+        midly.add(messageContainer, BorderLayout.NORTH); // CENTER에서 NORTH로 변경
         
-        // 스크롤팬 설정
-        //midly_menu.setViewportView(midly);
+        // 스크롤 패널 설정 수정
+        midly_menu.setViewportView(midly);
         midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
+        // midly의 크기 설정
+        int containerHeight = orderList_final.values().stream()
+            .mapToInt(List::size)
+            .sum() * 120; // 각 아이템당 120픽셀 높이 할당
+        
+        // 최소 높이 설정 (600px)
+        containerHeight = Math.max(containerHeight, 600);
+        
+        // midly의 선호 크기 설정
+        midly.setPreferredSize(new Dimension(midly.getPreferredSize().width, containerHeight));
+        
+        // messageContainer의 정렬 설정
+        messageContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        messageContainer.setAlignmentY(Component.TOP_ALIGNMENT);
 
+        // 스크롤 패널 설정 수정
+        midly_menu.setViewportView(midly);
+        midly_menu.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
         // 총 가격 계산
         int totalPrice = 0;
         for (List<Order_list> orderListItems : orderList_final.values()) {
@@ -363,6 +382,8 @@ public class FE_KIOSK extends JFrame {
         midly.repaint();
         midly_down.revalidate();
         midly_down.repaint();
+        midly_menu.revalidate();
+        midly_menu.repaint();
     }
 
     private void show_menu(String category) {
@@ -814,7 +835,7 @@ public class FE_KIOSK extends JFrame {
                 .url("https://be-api-takaaaans-projects.vercel.app/api/menu?available=true")
                 .build();
 
-        // 새로운 요청 목록 데이터 요청
+        // 새로운 요청 목록 데이��� 요청
         Request requestListRequest = new Request.Builder()
                 .url("https://be-api-takaaaans-projects.vercel.app/api/request/list")
                 .build();
