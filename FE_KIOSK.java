@@ -1019,8 +1019,13 @@ public class FE_KIOSK extends JFrame {
                 System.out.println("주문이 성공적으로 전송되었니다.");
                 orderList_final.clear();
                 show_success(1);
-                String firstCategory = menuData.keySet().iterator().next();
-                show_menu(firstCategory);
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        show_menu(menuData.keySet().iterator().next());
+                    
+                    }
+                    }
+                    );
                 
             } else {
                 System.out.println("주문 전송 실패: " + response.code());
