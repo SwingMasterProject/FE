@@ -241,8 +241,8 @@ public class FE_KIOSK extends JFrame {
         
         // Message 타이틀 추가
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel titleLabel = new JLabel("Check");
-        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
+        JLabel titleLabel = new JLabel("계산하기");
+        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 40));
         titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         titlePanel.add(titleLabel);
         midly_main.add(titlePanel);
@@ -508,8 +508,12 @@ public class FE_KIOSK extends JFrame {
         
         // Message 타이틀 추가
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel titleLabel = new JLabel("Message");
-        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 28));
+        JLabel titleLabel = new JLabel(
+            "<html>" +
+            "요청하기" +
+            "</html>"
+            );
+        titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 40));
         titlePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         titlePanel.add(titleLabel);
         midly_main.add(titlePanel);
@@ -769,7 +773,7 @@ public class FE_KIOSK extends JFrame {
 
         // 총 가격 표시
         JLabel totalPriceLabel = new JLabel(String.format("Total Price %,d원", totalPrice));
-        //totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 16));
+        totalPriceLabel.setFont(new Font(totalPriceLabel.getFont().getName(), Font.BOLD, 30));
         totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // 주문하기 튼 먼저 생성
@@ -780,6 +784,7 @@ public class FE_KIOSK extends JFrame {
         orderButton.setPreferredSize(new Dimension(400, 50));
         orderButton.setMaximumSize(new Dimension(400, 50));
         orderButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        orderButton.setFont(new Font(orderButton.getFont().getName(), orderButton.getFont().getStyle(), 20));
 
         // 주문하기 버튼 클릭 이벤트
         orderButton.addActionListener(e -> {
@@ -1166,7 +1171,7 @@ public class FE_KIOSK extends JFrame {
             JLabel textLabel = new JLabel(category);
             textLabel.setHorizontalAlignment(JLabel.RIGHT);
             textLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 30));
-            textLabel.setFont(textLabel.getFont().deriveFont(18.0f));  // 기존 폰트의 크만 18로 키우
+            textLabel.setFont(textLabel.getFont().deriveFont(25.0f));  // 기존 폰트의 크만 18로 키우
             
             // 구분선 추가
             JSeparator separator = new JSeparator();
@@ -1365,13 +1370,19 @@ public class FE_KIOSK extends JFrame {
         leftly_down.removeAll();
         leftly_down.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-        JButton homeButton = new JButton( // 여기 버튼들 html 스타일로 조정
-            "<html>" + 
-            "Home" +
-            "</html>"
-            );
+        JButton homeButton = new JButton("Home");
         JButton textButton = new JButton("요청하기");
         JButton checkButton = new JButton("계산하기");
+
+        Dimension buttonSize = new Dimension(100, 60); // 너비 200, 높이 50
+        homeButton.setPreferredSize(buttonSize);
+        textButton.setPreferredSize(buttonSize);
+        checkButton.setPreferredSize(buttonSize);
+
+        Font buttonFont = new Font(homeButton.getFont().getName(), Font.BOLD, 15); // Arial, Bold, 크기 18
+        homeButton.setFont(buttonFont);
+        textButton.setFont(buttonFont);
+        checkButton.setFont(buttonFont);
 
         // 버튼 클릭 이벤트 추가
         homeButton.addActionListener(e -> {
@@ -1451,7 +1462,7 @@ public class FE_KIOSK extends JFrame {
         
         // 왼 패널 (Item)
         JLabel itemLabel = new JLabel("Item");
-        itemLabel.setFont(new Font(itemLabel.getFont().getName(), Font.PLAIN, 16));
+        itemLabel.setFont(new Font(itemLabel.getFont().getName(), Font.PLAIN, 20));
         
         // 오른쪽 패널 (Qty와 Price)
         JPanel rightLabels = new JPanel();
@@ -1460,12 +1471,12 @@ public class FE_KIOSK extends JFrame {
         
         JPanel qtyPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));  // 오른쪽 정렬, 간격 20
         JLabel qtyLabel = new JLabel("Qty");
-        qtyLabel.setFont(new Font(qtyLabel.getFont().getName(), Font.PLAIN, 16));
+        qtyLabel.setFont(new Font(qtyLabel.getFont().getName(), Font.PLAIN, 20));
         qtyPanel.add(qtyLabel);
         
         JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));  // 오른쪽 정렬, 간격 20
         JLabel priceLabel = new JLabel("Price");
-        priceLabel.setFont(new Font(priceLabel.getFont().getName(), Font.PLAIN, 16));
+        priceLabel.setFont(new Font(priceLabel.getFont().getName(), Font.PLAIN, 20));
         pricePanel.add(priceLabel);
         
         rightLabels.add(qtyPanel);
